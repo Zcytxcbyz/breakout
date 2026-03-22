@@ -58,6 +58,10 @@ add_executable(breakout "src/breakout.cpp")
 # Release 下隐藏控制台（已有）
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     target_link_options(breakout PRIVATE /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup)
+    target_compile_options(breakout PRIVATE /GL)     # 全程序优化
+    target_link_options(breakout PRIVATE /LTCG)      # 链接时代码生成
+    target_link_options(breakout PRIVATE /OPT:REF)   # 移除未引用的函数和数据
+    target_link_options(breakout PRIVATE /OPT:ICF)   # 合并相同的 COMDAT 段
 endif()
 
 # 链接库
