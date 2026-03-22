@@ -51,7 +51,7 @@ target_link_libraries(imgui-sfml
 target_include_directories(imgui-sfml PUBLIC libs/imgui libs/imgui-sfml)
 
 # ========== 主程序 ==========
-add_executable(breakout src/main.cpp)
+add_executable(breakout "src/breakout.cpp")
 
 # Release 下隐藏控制台（已有）
 if(CMAKE_BUILD_TYPE STREQUAL "Release")

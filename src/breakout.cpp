@@ -1,6 +1,8 @@
 #include <SFML/Graphics.hpp>
 #include <imgui.h>
 #include <imgui-SFML.h>
+#include <box2d/box2d.h>
+#include <vector>
 
 enum GameState {
     STATE_MENU,
@@ -12,8 +14,30 @@ GameState gameState = STATE_MENU;
 bool gameWin = false;   // true=胜利, false=失败
 int score = 0;
 
-void resetGame() {
+// 物理世界与物体
+b2WorldId worldId;
+b2BodyId ball;
+b2BodyId paddle;
+std::vector<b2BodyId> bricks;
 
+void resetGame() {
+    // 重置分数
+    score = 0;
+    gameWin = false;
+
+    // 如果已有世界，先销毁
+    if (worldId.index1) {
+        for (auto brick : bricks) b2DestroyBody(brick);
+        b2DestroyBody(ball);
+        b2DestroyBody(paddle);
+        b2DestroyWorld(worldId);
+        bricks.clear();
+    }
+
+    // 创建世界（无重力）
+    b2WorldDef worldDef = b2DefaultWorldDef();
+    worldDef.gravity = { 0, 0 };
+    worldId = b2CreateWorld(&worldDef);
 }
 
 int main() {
