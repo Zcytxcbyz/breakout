@@ -1,6 +1,6 @@
-// Breakout - 基于 Box2D 和 SFML 的打砖块游戏
+// Breakout - Brick Breaker Game Based on Box2D and SFML
 
-// ---------- 头文件 ----------
+// ---------- Header Files ----------
 #include <SFML/Graphics.hpp>
 #include <imgui.h>
 #include <imgui-SFML.h>
@@ -9,120 +9,120 @@
 #include <box2d/box2d.h>
 #include <algorithm>
 
-// ---------- 游戏参数配置 ----------
+// ---------- Game Parameter Configuration ----------
 namespace Config {
-    // 窗口
-	const int WINDOW_W = 960;               // 窗口宽度（像素）
-	const int WINDOW_H = 540;               // 窗口高度（像素）
-	const int FRAME_LIMIT = 60;             // 帧率限制
+    // Window
+    const int WINDOW_W = 960;               // Window width (pixels)
+    const int WINDOW_H = 540;               // Window height (pixels)
+    const int FRAME_LIMIT = 60;             // Frame rate limit
 
-    // 物理单位转换
-	const float PPM = 30.0f;                // 1米 = 30像素
+    // Physics unit conversion
+    const float PPM = 30.0f;                // 1 meter = 30 pixels
 
-    // 球参数（像素单位）
-	const float BALL_RADIUS = 12.0f;        // 球半径（像素）
-	const float BALL_DENSITY = 1.0f;        // 密度（物理单位）
-	const float BALL_RESTITUTION = 1.0f;    // 反弹系数（物理单位）
-    const float BALL_INIT_SPEED = 200.0f;   // 像素/秒
-    const float MAX_BALL_SPEED = 20.0f;     // 米/秒（物理单位）
-	const float SPEED_FACTOR = 1.05f;       // 每次碰撞后速度增加的倍率
+    // Ball parameters (pixel units)
+    const float BALL_RADIUS = 12.0f;        // Ball radius (pixels)
+    const float BALL_DENSITY = 1.0f;        // Density (physics units)
+    const float BALL_RESTITUTION = 1.0f;    // Restitution coefficient (physics units)
+    const float BALL_INIT_SPEED = 200.0f;   // Pixels per second
+    const float MAX_BALL_SPEED = 20.0f;     // Meters per second (physics units)
+    const float SPEED_FACTOR = 1.05f;       // Speed multiplier after each collision
 
-    // 挡板参数（像素单位）
-	const float PADDLE_WIDTH = 160.0f;      // 挡板宽度（像素）
-	const float PADDLE_HEIGHT = 30.0f;      // 挡板高度（像素）
-    const float PADDLE_SPEED = 300.0f;      // 像素/秒
-	const float PADDLE_DENSITY = 1.0f;      // 密度（物理单位）
-	const float PADDLE_RESTITUTION = 1.0f;  // 反弹系数（物理单位）
+    // Paddle parameters (pixel units)
+    const float PADDLE_WIDTH = 160.0f;      // Paddle width (pixels)
+    const float PADDLE_HEIGHT = 30.0f;      // Paddle height (pixels)
+    const float PADDLE_SPEED = 300.0f;      // Pixels per second
+    const float PADDLE_DENSITY = 1.0f;      // Density (physics units)
+    const float PADDLE_RESTITUTION = 1.0f;  // Restitution coefficient (physics units)
 
-    // 边界墙厚度（像素）
-	const float WALL_THICKNESS = 10.0f;     // 边界墙厚度（像素）
+    // Boundary wall thickness (pixels)
+    const float WALL_THICKNESS = 10.0f;     // Boundary wall thickness (pixels)
 
-    // 砖块参数（像素单位）
-	const int BRICK_ROWS = 5;               // 砖块行数
-	const int BRICK_COLS = 10;              // 砖块列数
-	const float BRICK_START_X = 80.0f;      // 砖块起始X位置（像素）
-	const float BRICK_START_Y = 60.0f;      // 砖块起始Y位置（像素）  
-	const float BRICK_WIDTH = 70.0f;        // 砖块宽度（像素）
-	const float BRICK_HEIGHT = 25.0f;       // 砖块高度（像素）
-	const float BRICK_SPACING_X = 80.0f;    // 砖块水平间距（像素）
-	const float BRICK_SPACING_Y = 35.0f;    // 砖块垂直间距（像素）
-	const int BRICK_SPAWN_PROB = 70;        // 砖块生成概率（百分比）
-	const int MIN_HEALTH = 1;               // 砖块最少生命值 
-	const int MAX_HEALTH = 3;               // 砖块最多生命值
-	const int SCORE_PER_BRICK = 10;         // 每个砖块的分数
+    // Brick parameters (pixel units)
+    const int BRICK_ROWS = 5;               // Number of brick rows
+    const int BRICK_COLS = 10;              // Number of brick columns
+    const float BRICK_START_X = 80.0f;      // Brick starting X position (pixels)
+    const float BRICK_START_Y = 60.0f;      // Brick starting Y position (pixels)  
+    const float BRICK_WIDTH = 70.0f;        // Brick width (pixels)
+    const float BRICK_HEIGHT = 25.0f;       // Brick height (pixels)
+    const float BRICK_SPACING_X = 80.0f;    // Brick horizontal spacing (pixels)
+    const float BRICK_SPACING_Y = 35.0f;    // Brick vertical spacing (pixels)
+    const int BRICK_SPAWN_PROB = 70;        // Brick spawn probability (percentage)
+    const int MIN_HEALTH = 1;               // Minimum brick health
+    const int MAX_HEALTH = 3;               // Maximum brick health
+    const int SCORE_PER_BRICK = 10;         // Score per brick
 
-    // 初始位置偏移（像素）
-    const float BALL_Y_OFFSET = 50.0f;      // 球相对于屏幕中心的Y偏移
-    const float PADDLE_Y_OFFSET = 50.0f;    // 挡板距离底部的距离
+    // Initial position offsets (pixels)
+    const float BALL_Y_OFFSET = 50.0f;      // Ball's Y offset relative to screen center
+    const float PADDLE_Y_OFFSET = 50.0f;    // Paddle's distance from the bottom
 }
 
-// ---------- UI 文本 ----------
+// ---------- UI Text ----------
 namespace Texts {
-	const char* GameName = "Breakout";                              // 游戏名称
-	const char* StartGame = "Start Game";                           // 开始游戏按钮文本
-	const char* Help = "Help";                                      // 帮助按钮文本
-	const char* Exit = "Exit";                                      // 退出按钮文本
-	const char* Controls = "Controls:";                             // 控制说明标题
-	const char* BrickHealth = "Brick Health (Color -> Hits):";      // 砖块生命值说明
-	const char* MoveRight = "Move Right: D / Right Arrow";          // 向右移动说明
-	const char* MoveLeft = "Move Left: A / Left Arrow";             // 向左移动说明
-	const char* RedHit = "Red   -> 1 hit";                          // 红色砖块说明
-	const char* GreenHit = "Green -> 2 hits";                       // 绿色砖块说明
-	const char* BlueHit = "Blue  -> 3 hits";                        // 蓝色砖块说明
-	const char* DestroyAll = "Destroy all bricks to win!";          // 游戏目标说明
-	const char* Close = "Close";                                    // 关闭按钮文本
-	const char* ScoreFormat = "Score: %d";                          // 分数显示格式
-	const char* ScoreWindow = "Score";                              // 分数窗口标题
-	const char* YouWin = "You Win!";                                // 胜利文本
-	const char* GameOver = "Game Over";                             // 失败文本
-	const char* Restart = "Restart";                                // 重新开始按钮文本
-	const char* MainMenu = "Main Menu";                             // 主菜单按钮文本
+    const char* GameName = "Breakout";                              // Game name
+    const char* StartGame = "Start Game";                           // Start game button text
+    const char* Help = "Help";                                      // Help button text
+    const char* Exit = "Exit";                                      // Exit button text
+    const char* Controls = "Controls:";                             // Controls title
+    const char* BrickHealth = "Brick Health (Color -> Hits):";      // Brick health explanation
+    const char* MoveRight = "Move Right: D / Right Arrow";          // Move right explanation
+    const char* MoveLeft = "Move Left: A / Left Arrow";             // Move left explanation
+    const char* RedHit = "Red   -> 1 hit";                          // Red brick explanation
+    const char* GreenHit = "Green -> 2 hits";                       // Green brick explanation
+    const char* BlueHit = "Blue  -> 3 hits";                        // Blue brick explanation
+    const char* DestroyAll = "Destroy all bricks to win!";          // Game objective explanation
+    const char* Close = "Close";                                    // Close button text
+    const char* ScoreFormat = "Score: %d";                          // Score display format
+    const char* ScoreWindow = "Score";                              // Score window title
+    const char* YouWin = "You Win!";                                // Victory text
+    const char* GameOver = "Game Over";                             // Failure text
+    const char* Restart = "Restart";                                // Restart button text
+    const char* MainMenu = "Main Menu";                             // Main menu button text
 }
 
-// ---------- 全局变量 ----------
-// 游戏状态枚举
+// ---------- Global Variables ----------
+// Game state enumeration
 enum GameState {
-	STATE_MENU,         // 主菜单
-	STATE_PLAYING,      // 游戏进行中
-	STATE_GAMEOVER      // 游戏结束
+    STATE_MENU,         // Main menu
+    STATE_PLAYING,      // Game in progress
+    STATE_GAMEOVER      // Game over
 };
 
-GameState gameState = STATE_MENU;           // 当前游戏状态
-bool gameWin = false;                       // 是否赢得游戏
-int score = 0;                              // 当前分数
-bool showHelp = false;                      // 是否显示帮助窗口
+GameState gameState = STATE_MENU;           // Current game state
+bool gameWin = false;                       // Whether the game has been won
+int score = 0;                              // Current score
+bool showHelp = false;                      // Whether to show the help window
 
-b2World* world = nullptr;                   // Box2D物理世界指针
-b2Body* ball = nullptr;                     // 球的物理身体指针
-b2Body* paddle = nullptr;                   // 挡板的物理身体指针
-std::vector<b2Body*> bricks;                // 砖块的物理身体指针列表
-std::vector<int> brickHealth;               // 砖块的生命值列表
-std::vector<sf::RectangleShape> sfBricks;   // 砖块的SFML图形列表
+b2World* world = nullptr;                   // Box2D physics world pointer
+b2Body* ball = nullptr;                     // Ball physics body pointer
+b2Body* paddle = nullptr;                   // Paddle physics body pointer
+std::vector<b2Body*> bricks;                // List of brick physics body pointers
+std::vector<int> brickHealth;               // List of brick health values
+std::vector<sf::RectangleShape> sfBricks;   // List of brick SFML graphics
 
-sf::CircleShape sfBall;                     // 球的SFML图形
-sf::RectangleShape sfPaddle;                // 挡板的SFML图形
+sf::CircleShape sfBall;                     // Ball SFML graphic
+sf::RectangleShape sfPaddle;                // Paddle SFML graphic
 
-std::random_device rd;  // 随机数种子
-std::mt19937 rng(rd()); // 随机数生成器
+std::random_device rd;  // Random number seed
+std::mt19937 rng(rd()); // Random number generator
 
-// ---------- 坐标转换函数 ----------
+// ---------- Coordinate Conversion Functions ----------
 inline b2Vec2 toBox2D(const sf::Vector2f& pos) {
     return { pos.x / Config::PPM, (Config::WINDOW_H - pos.y) / Config::PPM };
 }
 
-// Box2D坐标转换为SFML坐标（注意Y轴翻转）
+// Convert Box2D coordinates to SFML coordinates (note Y-axis flip)
 inline sf::Vector2f toSFML(const b2Vec2& pos) {
     return { pos.x * Config::PPM, Config::WINDOW_H - pos.y * Config::PPM };
 }
 
-// ---------- 碰撞监听器 ----------
+// ---------- Collision Listener ----------
 class ContactListener : public b2ContactListener {
 public:
     void BeginContact(b2Contact* contact) override {
         b2Body* bodyA = contact->GetFixtureA()->GetBody();
         b2Body* bodyB = contact->GetFixtureB()->GetBody();
 
-		// 检测是否是球与其他物体的碰撞
+        // Check if it's a collision between the ball and another object
         bool ballHit = false;
         b2Body* other = nullptr;
         if (bodyA == ball) {
@@ -135,7 +135,7 @@ public:
         }
 
         if (ballHit) {
-			// 如果碰撞对象是挡板或砖块，增加球的速度
+            // If the collided object is the paddle or a brick, increase the ball's speed
             if (other == paddle || std::find(bricks.begin(), bricks.end(), other) != bricks.end()) {
                 b2Vec2 vel = ball->GetLinearVelocity();
                 vel.x *= Config::SPEED_FACTOR;
@@ -147,7 +147,7 @@ public:
                 ball->SetLinearVelocity(vel);
             }
 
-			// 如果碰撞对象是砖块，减少砖块的生命值并检查是否需要销毁
+            // If the collided object is a brick, reduce the brick's health and check if it needs to be destroyed
             if ((bodyA == ball && bodyB != paddle) || (bodyB == ball && bodyA != paddle)) {
                 b2Body* brickBody = (bodyA == ball) ? bodyB : bodyA;
                 auto it = std::find(bricks.begin(), bricks.end(), brickBody);
@@ -162,7 +162,7 @@ public:
                 }
             }
 
-			// 如果碰撞对象是地面，游戏结束
+            // If the collided object is the ground, game over
             if ((bodyA == ball && bodyB == ground) || (bodyB == ball && bodyA == ground)) {
                 gameState = STATE_GAMEOVER;
                 gameWin = false;
@@ -170,16 +170,16 @@ public:
         }
     }
 
-	// 碰撞结束时不需要处理
+    // No processing needed on collision end
     std::vector<b2Body*> toDestroy;
     b2Body* ground = nullptr;
 };
 
 ContactListener contactListener;
 
-// ---------- 重置游戏 ----------
+// ---------- Reset Game ----------
 void resetGame() {
-	// 销毁
+    // Destroy
     if (world) {
         for (auto brick : bricks) world->DestroyBody(brick);
         if (ball) world->DestroyBody(ball);
@@ -192,34 +192,34 @@ void resetGame() {
         contactListener.toDestroy.clear();
     }
 
-	// 创建新的物理世界
+    // Create a new physics world
     world = new b2World(b2Vec2(0, 0));
     world->SetContactListener(&contactListener);
 
-    // ----- 边界墙 -----
+    // ----- Boundary Walls -----
     b2BodyDef wallDef;
     wallDef.type = b2_staticBody;
     b2PolygonShape wallShape;
 
-    // 左墙
+    // Left wall
     wallShape.SetAsBox(Config::WALL_THICKNESS / 2 / Config::PPM, Config::WINDOW_H / 2 / Config::PPM);
     b2Body* leftWall = world->CreateBody(&wallDef);
     leftWall->CreateFixture(&wallShape, 0);
     leftWall->SetTransform(b2Vec2(Config::WALL_THICKNESS / 2 / Config::PPM, Config::WINDOW_H / 2 / Config::PPM), 0);
 
-    // 右墙
+    // Right wall
     wallShape.SetAsBox(Config::WALL_THICKNESS / 2 / Config::PPM, Config::WINDOW_H / 2 / Config::PPM);
     b2Body* rightWall = world->CreateBody(&wallDef);
     rightWall->CreateFixture(&wallShape, 0);
     rightWall->SetTransform(b2Vec2((Config::WINDOW_W - Config::WALL_THICKNESS) / Config::PPM, Config::WINDOW_H / 2 / Config::PPM), 0);
 
-    // 天花板（顶部）
+    // Ceiling (top)
     wallShape.SetAsBox(Config::WINDOW_W / 2 / Config::PPM, Config::WALL_THICKNESS / 2 / Config::PPM);
     b2Body* ceiling = world->CreateBody(&wallDef);
     ceiling->CreateFixture(&wallShape, 0);
     ceiling->SetTransform(b2Vec2(Config::WINDOW_W / 2 / Config::PPM, (Config::WINDOW_H - Config::WALL_THICKNESS / 2) / Config::PPM), 0);
 
-    // 地面（底部，用于失败检测）
+    // Ground (bottom, used for loss detection)
     b2BodyDef groundDef;
     groundDef.type = b2_staticBody;
     b2PolygonShape groundShape;
@@ -229,7 +229,7 @@ void resetGame() {
     ground->SetTransform(b2Vec2(Config::WINDOW_W / 2 / Config::PPM, Config::WALL_THICKNESS / 2 / Config::PPM), 0);
     contactListener.ground = ground;
 
-    // ----- 球 -----
+    // ----- Ball -----
     b2BodyDef ballDef;
     ballDef.type = b2_dynamicBody;
     ballDef.position = toBox2D(sf::Vector2f(Config::WINDOW_W / 2, Config::WINDOW_H / 2 + Config::BALL_Y_OFFSET));
@@ -244,7 +244,7 @@ void resetGame() {
     ball->SetLinearVelocity(b2Vec2(Config::BALL_INIT_SPEED / Config::PPM, -Config::BALL_INIT_SPEED / Config::PPM));
     ball->SetBullet(true);
 
-    // ----- 挡板 -----
+    // ----- Paddle -----
     b2BodyDef paddleDef;
     paddleDef.type = b2_kinematicBody;
     paddleDef.position = toBox2D(sf::Vector2f(Config::WINDOW_W / 2, Config::WINDOW_H - Config::PADDLE_Y_OFFSET));
@@ -257,24 +257,24 @@ void resetGame() {
     paddleFix.restitution = Config::PADDLE_RESTITUTION;
     paddle->CreateFixture(&paddleFix);
 
-    // ----- 砖块 -----
+    // ----- Bricks -----
     std::uniform_int_distribution<int> healthDist(Config::MIN_HEALTH, Config::MAX_HEALTH);
     std::uniform_int_distribution<int> spawnDist(0, 99);
 
-	// 根据配置生成砖块，随机决定每个位置是否生成以及生成的生命值
+    // Generate bricks according to configuration, randomly decide whether to spawn at each position and the health value
     for (int r = 0; r < Config::BRICK_ROWS; ++r) {
         for (int c = 0; c < Config::BRICK_COLS; ++c) {
-			// 根据生成概率决定是否生成砖块
+            // Decide whether to generate a brick based on spawn probability
             if (spawnDist(rng) >= Config::BRICK_SPAWN_PROB) continue;
 
-			// 随机生成砖块生命值    
+            // Randomly generate brick health    
             int health = healthDist(rng);
             float x = Config::BRICK_START_X + c * Config::BRICK_SPACING_X;
             float y = Config::BRICK_START_Y + r * Config::BRICK_SPACING_Y;
             float centerX = x + Config::BRICK_WIDTH / 2;
             float centerY = y + Config::BRICK_HEIGHT / 2;
 
-			// 创建砖块的物理身体
+            // Create brick physics body
             b2BodyDef brickDef;
             brickDef.type = b2_staticBody;
             brickDef.position = toBox2D(sf::Vector2f(centerX, centerY));
@@ -283,11 +283,11 @@ void resetGame() {
             brickShape.SetAsBox((Config::BRICK_WIDTH / 2) / Config::PPM, (Config::BRICK_HEIGHT / 2) / Config::PPM);
             brick->CreateFixture(&brickShape, 0);
 
-			// 将砖块信息保存到全局列表中
+            // Save brick information to global lists
             bricks.push_back(brick);
             brickHealth.push_back(health);
 
-			// 根据生命值设置砖块颜色并创建SFML图形
+            // Set brick color based on health and create SFML graphic
             sf::RectangleShape rect(sf::Vector2f(Config::BRICK_WIDTH, Config::BRICK_HEIGHT));
             rect.setOrigin(sf::Vector2f(Config::BRICK_WIDTH / 2, Config::BRICK_HEIGHT / 2));
             rect.setPosition(sf::Vector2f(centerX, centerY));
@@ -298,7 +298,7 @@ void resetGame() {
         }
     }
 
-    // 初始化球和挡板图形
+    // Initialize ball and paddle graphics
     sfBall.setRadius(Config::BALL_RADIUS);
     sfBall.setFillColor(sf::Color::White);
     sfBall.setOrigin(sf::Vector2f(Config::BALL_RADIUS, Config::BALL_RADIUS));
@@ -306,14 +306,14 @@ void resetGame() {
     sfPaddle.setFillColor(sf::Color::White);
     sfPaddle.setOrigin(sf::Vector2f(Config::PADDLE_WIDTH / 2, Config::PADDLE_HEIGHT / 2));
 
-	// 重置分数和游戏状态
+    // Reset score and game state
     score = 0;
     gameWin = false;
 }
 
-// ---------- 游戏更新 ----------
+// ---------- Game Update ----------
 void updateGame() {
-	// 根据键盘输入控制挡板移动
+    // Control paddle movement based on keyboard input
     float paddle_speed = Config::PADDLE_SPEED / Config::PPM;
     b2Vec2 paddle_vel(0, 0);
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) ||
@@ -324,10 +324,10 @@ void updateGame() {
         paddle_vel.x = paddle_speed;
     paddle->SetLinearVelocity(paddle_vel);
 
-	// 物理步进
+    // Physics step
     world->Step(1.0f / Config::FRAME_LIMIT, 8, 3);
 
-    // 挡板边界限制
+    // Paddle boundary restriction
     float halfWidth = (Config::PADDLE_WIDTH / 2) / Config::PPM;
     float leftBound = Config::WALL_THICKNESS / Config::PPM;
     float rightBound = (Config::WINDOW_W - Config::WALL_THICKNESS) / Config::PPM;
@@ -342,7 +342,7 @@ void updateGame() {
     }
     paddle->SetTransform(paddlePos, 0);
 
-	// 销毁生命值为0的砖块并更新分数
+    // Destroy bricks with zero health and update score
     for (b2Body* brick : contactListener.toDestroy) {
         auto it = std::find(bricks.begin(), bricks.end(), brick);
         if (it != bricks.end()) {
@@ -356,14 +356,14 @@ void updateGame() {
     }
     contactListener.toDestroy.clear();
 
-	// 检查是否所有砖块都被销毁，如果是则游戏胜利
+    // Check if all bricks have been destroyed, if so, game victory
     if (bricks.empty()) {
         gameState = STATE_GAMEOVER;
         gameWin = true;
         return;
     }
 
-	// 更新球和挡板的SFML图形位置
+    // Update SFML graphic positions for ball and paddle
     sfBall.setPosition(toSFML(ball->GetPosition()));
     sfPaddle.setPosition(toSFML(paddle->GetPosition()));
     for (size_t i = 0; i < bricks.size(); ++i) {
@@ -371,7 +371,7 @@ void updateGame() {
     }
 }
 
-// ---------- 渲染游戏 ----------
+// ---------- Render Game ----------
 void renderGame(sf::RenderWindow& window) {
     window.draw(sfBall);
     window.draw(sfPaddle);
@@ -380,9 +380,9 @@ void renderGame(sf::RenderWindow& window) {
     }
 }
 
-// ---------- UI 窗口函数 ----------
+// ---------- UI Window Functions ----------
 void helpWindow(sf::RenderWindow& window, sf::Vector2u& winSize) {
-	// 在屏幕中心显示帮助窗口，包含游戏控制说明和目标说明
+    // Display help window at screen center, containing game control instructions and objective explanation
     ImGui::SetNextWindowSize(ImVec2(400, 250), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowPos(ImVec2(winSize.x / 2.0f, winSize.y / 2.0f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
     ImGui::Begin(Texts::Help, &showHelp, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
@@ -403,9 +403,9 @@ void helpWindow(sf::RenderWindow& window, sf::Vector2u& winSize) {
     ImGui::End();
 }
 
-// --------- 主菜单和游戏结束窗口 ----------
+// --------- Main Menu and Game Over Window ----------
 void startMenu(sf::RenderWindow& window) {
-	// 在屏幕中心显示主菜单窗口，包含游戏标题和选项按钮
+    // Display main menu window at screen center, containing game title and option buttons
     sf::Vector2u winSize = window.getSize();
     ImGui::SetNextWindowPos(ImVec2(winSize.x / 2.0f, winSize.y / 2.0f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowSize(ImVec2(250, 200), ImGuiCond_Always);
@@ -443,9 +443,9 @@ void startMenu(sf::RenderWindow& window) {
     }
 }
 
-// 游戏结束窗口
+// Game over window
 void gameOver(sf::RenderWindow& window) {
-	// 在屏幕中心显示游戏结束或胜利的窗口，显示分数和选项按钮
+    // Display game over or victory window at screen center, showing score and option buttons
     sf::Vector2u winSize = window.getSize();
     ImGui::SetNextWindowPos(ImVec2(winSize.x / 2.0f, winSize.y / 2.0f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowSize(ImVec2(300, 160), ImGuiCond_Always);
@@ -483,9 +483,9 @@ void gameOver(sf::RenderWindow& window) {
     ImGui::End();
 }
 
-// ---------- 显示分数窗口 ----------
+// ---------- Display Score Window ----------
 void showScore() {
-	// 在屏幕左上角显示当前分数，半透明背景，禁止交互
+    // Display current score at the top left corner of the screen, with semi-transparent background, non-interactive
     ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(100, 40), ImGuiCond_Always);
     ImGui::SetNextWindowBgAlpha(0.5f);
@@ -499,31 +499,31 @@ void showScore() {
     ImGui::End();
 }
 
-// ---------- 主函数 ----------
+// ---------- Main Function ----------
 int main() {
-	// 创建SFML窗口
+    // Create SFML window
     sf::RenderWindow window(sf::VideoMode({ Config::WINDOW_W, Config::WINDOW_H }), Texts::GameName, sf::Style::Titlebar | sf::Style::Close);
     window.setFramerateLimit(Config::FRAME_LIMIT);
     ImGui::SFML::Init(window);
 
-	// 禁止ImGui自动保存窗口位置和大小
+    // Disable ImGui automatic window position and size saving
     ImGuiIO& io = ImGui::GetIO();
     io.IniFilename = nullptr;
 
-	// 主循环
+    // Main loop
     sf::Clock deltaClock;
     while (window.isOpen()) {
-		// 处理事件
+        // Process events
         while (const auto event = window.pollEvent()) {
             ImGui::SFML::ProcessEvent(window, *event);
             if (event->is<sf::Event::Closed>())
                 window.close();
         }
 
-		// 更新ImGui状态
+        // Update ImGui state
         ImGui::SFML::Update(window, deltaClock.restart());
 
-		// 根据游戏状态显示不同的UI
+        // Display different UI based on game state
         if (gameState == STATE_MENU) {
             startMenu(window);
         }
@@ -535,14 +535,14 @@ int main() {
             gameOver(window);
         }
 
-		// 渲染游戏和UI
+        // Render game and UI
         window.clear();
         renderGame(window);
         ImGui::SFML::Render(window);
         window.display();
     }
 
-	// 清理资源
+    // Clean up resources
     ImGui::SFML::Shutdown();
     if (world) delete world;
     return 0;
