@@ -32,34 +32,52 @@ Objective: Break all bricks. If the ball falls off the bottom, the game ends in 
 
 ## 📦 Dependencies
 
-The project uses the following libraries (included in source code, no manual installation required):
+The project uses the following libraries:
 
 - **SFML 3.0.2** (graphics, window, system)
 - **Box2D 2.4.2** (physics engine)
 - **Dear ImGui 1.91.9** (UI library)
 - **imgui-sfml 3.0** (ImGui binding for SFML)
 
-All dependencies are stored as source code in the `libs/` directory and compiled together via CMake.
+All dependencies are stored as source code in the `libs/` directory. A helper script is provided to automatically clone them.
 
 ---
 
-## 🔧 Compilation and Building
+## 🔧 Getting Dependencies
+
+Run the provided Python script to clone all required dependencies into the `libs/` folder:
+
+```bash
+python clone_deps.py
+```
+
+This script requires **Python 3** and **Git** to be installed and available in your PATH. It will clone each library at the exact version used by the project.
+
+---
+
+## 🔨 Compilation and Building
 
 ### Requirements
 
 - Windows 10/11
 - Visual Studio 2022 or higher (or MinGW-w64)
 - CMake 3.15 or higher
+- Python 3 (for fetching dependencies, optional if you manually place them)
 
 ### Steps
 
-1. **Clone the repository** (assuming you already have the source code):
+1. **Clone this repository** (or download the source code):
    ```bash
    git clone https://github.com/yourname/breakout.git
    cd breakout
    ```
 
-2. **Generate project files**  
+2. **Fetch dependencies** (if not already present):
+   ```bash
+   python clone_deps.py
+   ```
+
+3. **Generate project files**  
    Open a terminal and execute the following commands (using Visual Studio 2022 as an example):
    ```bash
    mkdir build
@@ -67,13 +85,13 @@ All dependencies are stored as source code in the `libs/` directory and compiled
    cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
    ```
 
-3. **Compile**  
+4. **Compile**  
    Open the generated `breakout.sln` in Visual Studio, select the `Release` configuration, and build the solution; or directly from the command line:
    ```bash
    cmake --build . --config Release
    ```
 
-4. **Run**  
+5. **Run**  
    After compilation, the executable file is located at `build/Release/breakout.exe`, run it directly.
 
 > **Note**: If using MinGW-w64, change the generator to `"MinGW Makefiles"` and ensure the corresponding toolchain is installed.
