@@ -54,3 +54,6 @@ Thumbs.db
 # Backup files
 *.bak
 *.backup
+
+# Ignore the libs directory if it contains third-party dependencies
+libs/
