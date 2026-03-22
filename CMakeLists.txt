@@ -1,9 +1,12 @@
-﻿cmake_minimum_required(VERSION 3.15)
+﻿# CMakeLists.txt for Breakout Game
+cmake_minimum_required(VERSION 3.15)
 project(breakout)
 
+# ========== C++17 标准 ==========
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# ========== 默认构建类型为 Debug ==========
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
