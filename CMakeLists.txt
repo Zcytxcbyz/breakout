@@ -1,4 +1,4 @@
-﻿# CMakeLists.txt for Breakout Game
+# CMakeLists.txt for Breakout Game
 cmake_minimum_required(VERSION 3.15)
 project(breakout)
 
