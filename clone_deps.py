@@ -27,7 +27,7 @@ DEPENDENCIES = [
     },
     {
         "url": "https://github.com/SFML/imgui-sfml.git",
-        "version": "master",    # 3.0 corresponds to master branch
+        "version": "v3.0",
         "dir": "imgui-sfml"
     }
 ]
