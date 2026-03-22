@@ -68,7 +68,7 @@ This script requires **Python 3** and **Git** to be installed and available in y
 
 1. **Clone this repository** (or download the source code):
    ```bash
-   git clone https://github.com/yourname/breakout.git
+   git clone https://github.com/Zcytxcbyz/breakout.git
    cd breakout
    ```
 
