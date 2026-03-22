@@ -60,6 +60,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
     target_link_options(breakout PRIVATE /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup)
 endif()
 
+# 链接库
 target_link_libraries(breakout
     PRIVATE
     sfml-graphics
