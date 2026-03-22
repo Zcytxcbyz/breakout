@@ -53,6 +53,29 @@ namespace Config {
     const float PADDLE_Y_OFFSET = 50.0f;      // 挡板距离底部的距离
 }
 
+// ---------- UI 文本 ----------
+namespace Texts {
+    const char* GameName = "Breakout";
+    const char* StartGame = "Start Game";
+    const char* Help = "Help";
+    const char* Exit = "Exit";
+    const char* Controls = "Controls:";
+    const char* BrickHealth = "Brick Health (Color -> Hits):";
+	const char* MoveRight = "Move Right: D / Right Arrow";
+	const char* MoveLeft = "Move Left: A / Left Arrow";
+    const char* RedHit = "Red   -> 1 hit";
+    const char* GreenHit = "Green -> 2 hits";
+    const char* BlueHit = "Blue  -> 3 hits";
+    const char* DestroyAll = "Destroy all bricks to win!";
+    const char* Close = "Close";
+    const char* ScoreFormat = "Score: %d";
+    const char* ScoreWindow = "Score";
+    const char* YouWin = "You Win!";
+    const char* GameOver = "Game Over";
+    const char* Restart = "Restart";
+    const char* MainMenu = "Main Menu";
+}
+
 // ---------- 全局变量 ----------
 enum GameState {
     STATE_MENU,
@@ -336,19 +359,19 @@ void renderGame(sf::RenderWindow& window) {
 void helpWindow(sf::RenderWindow& window, sf::Vector2u& winSize) {
     ImGui::SetNextWindowSize(ImVec2(400, 250), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowPos(ImVec2(winSize.x / 2.0f, winSize.y / 2.0f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
-    ImGui::Begin("Help", &showHelp, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
-    ImGui::Text("Controls:");
-    ImGui::BulletText("Move Left: A / Left Arrow");
-    ImGui::BulletText("Move Right: D / Right Arrow");
+    ImGui::Begin(Texts::Help, &showHelp, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::Text(Texts::Controls);
+    ImGui::BulletText(Texts::MoveLeft);
+    ImGui::BulletText(Texts::MoveRight);
     ImGui::Separator();
-    ImGui::Text("Brick Health (Color -> Hits):");
-    ImGui::BulletText("Red   -> 1 hit");
-    ImGui::BulletText("Green -> 2 hits");
-    ImGui::BulletText("Blue  -> 3 hits");
+    ImGui::Text(Texts::BrickHealth);
+    ImGui::BulletText(Texts::RedHit);
+    ImGui::BulletText(Texts::GreenHit);
+    ImGui::BulletText(Texts::BlueHit);
     ImGui::Separator();
-    ImGui::Text("Destroy all bricks to win!");
+    ImGui::Text(Texts::DestroyAll);
     ImGui::Spacing();
-    if (ImGui::Button("Close", ImVec2(80, 30))) {
+    if (ImGui::Button(Texts::Close, ImVec2(80, 30))) {
         showHelp = false;
     }
     ImGui::End();
@@ -358,7 +381,7 @@ void startMenu(sf::RenderWindow& window) {
     sf::Vector2u winSize = window.getSize();
     ImGui::SetNextWindowPos(ImVec2(winSize.x / 2.0f, winSize.y / 2.0f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowSize(ImVec2(250, 200), ImGuiCond_Always);
-    ImGui::Begin("MainMenu", nullptr,
+    ImGui::Begin(Texts::MainMenu, nullptr,
         ImGuiWindowFlags_NoTitleBar |
         ImGuiWindowFlags_NoResize |
         ImGuiWindowFlags_NoMove |
@@ -366,23 +389,23 @@ void startMenu(sf::RenderWindow& window) {
 
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 40);
     ImGui::SetWindowFontScale(1.5f);
-    ImGui::Text("Breakout");
+    ImGui::Text(Texts::GameName);
     ImGui::SetWindowFontScale(1.0f);
     ImGui::Spacing(); ImGui::Spacing();
 
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
-    if (ImGui::Button("Start Game", ImVec2(120, 40))) {
+    if (ImGui::Button(Texts::StartGame, ImVec2(120, 40))) {
         gameState = STATE_PLAYING;
         resetGame();
     }
     ImGui::Spacing();
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
-    if (ImGui::Button("Help", ImVec2(120, 40))) {
+    if (ImGui::Button(Texts::Help, ImVec2(120, 40))) {
         showHelp = true;
     }
     ImGui::Spacing();
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
-    if (ImGui::Button("Exit", ImVec2(120, 40))) {
+    if (ImGui::Button(Texts::Exit, ImVec2(120, 40))) {
         window.close();
     }
     ImGui::End();
@@ -396,7 +419,7 @@ void gameOver(sf::RenderWindow& window) {
     sf::Vector2u winSize = window.getSize();
     ImGui::SetNextWindowPos(ImVec2(winSize.x / 2.0f, winSize.y / 2.0f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowSize(ImVec2(300, 160), ImGuiCond_Always);
-    ImGui::Begin("GameOver", nullptr,
+    ImGui::Begin(Texts::GameOver, nullptr,
         ImGuiWindowFlags_NoTitleBar |
         ImGuiWindowFlags_NoResize |
         ImGuiWindowFlags_NoMove |
@@ -405,25 +428,25 @@ void gameOver(sf::RenderWindow& window) {
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 40);
     ImGui::SetWindowFontScale(1.3f);
     if (gameWin)
-        ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "You Win!");
+        ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), Texts::YouWin);
     else
-        ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), "Game Over");
+        ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), Texts::GameOver);
     ImGui::SetWindowFontScale(1.0f);
     ImGui::Spacing();
 
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 30);
-    ImGui::Text("Score: %d", score);
+    ImGui::Text(Texts::ScoreFormat, score);
     ImGui::Spacing(); ImGui::Spacing();
 
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
-    if (ImGui::Button("Restart", ImVec2(120, 40))) {
+    if (ImGui::Button(Texts::Restart, ImVec2(120, 40))) {
         resetGame();
         gameState = STATE_PLAYING;
     }
     ImGui::Spacing();
 
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
-    if (ImGui::Button("Main Menu", ImVec2(120, 40))) {
+    if (ImGui::Button(Texts::MainMenu, ImVec2(120, 40))) {
         gameState = STATE_MENU;
         resetGame();
     }
@@ -434,19 +457,19 @@ void showScore() {
     ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(100, 40), ImGuiCond_Always);
     ImGui::SetNextWindowBgAlpha(0.5f);
-    ImGui::Begin("Score", nullptr,
+    ImGui::Begin(Texts::ScoreWindow, nullptr,
         ImGuiWindowFlags_NoTitleBar |
         ImGuiWindowFlags_NoResize |
         ImGuiWindowFlags_NoMove |
         ImGuiWindowFlags_NoInputs);
     ImGui::SetWindowFontScale(1.2f);
-    ImGui::Text("Score: %d", score);
+    ImGui::Text(Texts::ScoreFormat, score);
     ImGui::End();
 }
 
 // ---------- 主函数 ----------
 int main() {
-    sf::RenderWindow window(sf::VideoMode({ Config::WINDOW_W, Config::WINDOW_H }), "Breakout", sf::Style::Titlebar | sf::Style::Close);
+    sf::RenderWindow window(sf::VideoMode({ Config::WINDOW_W, Config::WINDOW_H }), Texts::GameName, sf::Style::Titlebar | sf::Style::Close);
     window.setFramerateLimit(Config::FRAME_LIMIT);
     ImGui::SFML::Init(window);
 
