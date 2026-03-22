@@ -24,6 +24,8 @@ set(SFML_USE_SYSTEM_LIBS OFF CACHE BOOL "" FORCE)
 add_subdirectory(libs/SFML)
 
 # ========== Box2D ==========
+set(BOX2D_BUILD_UNIT_TESTS OFF CACHE BOOL "" FORCE)
+set(BOX2D_BUILD_TESTBED OFF CACHE BOOL "" FORCE)
 add_subdirectory(libs/box2d)
 
 # ========== OpenGL ==========
@@ -63,7 +65,7 @@ target_link_libraries(breakout
     sfml-graphics
     sfml-window
     sfml-system
-    box2d::box2d
+    box2d
     imgui-sfml
     OpenGL::GL
 )
