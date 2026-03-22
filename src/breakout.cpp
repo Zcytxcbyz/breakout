@@ -6,9 +6,54 @@
 #include <box2d/box2d.h>
 #include <algorithm>
 
-// ----------全局变量定义----------
+// ---------- 游戏参数配置 ----------
+namespace Config {
+    // 窗口
+    const int WINDOW_W = 960;
+    const int WINDOW_H = 540;
+    const int FRAME_LIMIT = 60;
 
-// 游戏状态枚举
+    // 物理单位转换
+    const float PPM = 30.0f;
+
+    // 球参数（像素单位）
+    const float BALL_RADIUS = 12.0f;
+    const float BALL_DENSITY = 1.0f;
+    const float BALL_RESTITUTION = 1.0f;
+    const float BALL_INIT_SPEED = 200.0f;    // 像素/秒
+    const float MAX_BALL_SPEED = 20.0f;      // 米/秒（物理单位）
+    const float SPEED_FACTOR = 1.05f;
+
+    // 挡板参数（像素单位）
+    const float PADDLE_WIDTH = 160.0f;
+    const float PADDLE_HEIGHT = 30.0f;
+    const float PADDLE_SPEED = 300.0f;       // 像素/秒
+    const float PADDLE_DENSITY = 1.0f;
+    const float PADDLE_RESTITUTION = 1.0f;
+
+    // 边界墙厚度（像素）
+    const float WALL_THICKNESS = 10.0f;
+
+    // 砖块参数（像素单位）
+    const int BRICK_ROWS = 5;
+    const int BRICK_COLS = 10;
+    const float BRICK_START_X = 80.0f;
+    const float BRICK_START_Y = 60.0f;
+    const float BRICK_WIDTH = 70.0f;
+    const float BRICK_HEIGHT = 25.0f;
+    const float BRICK_SPACING_X = 80.0f;
+    const float BRICK_SPACING_Y = 35.0f;
+    const int BRICK_SPAWN_PROB = 70;         // 0-100
+    const int MIN_HEALTH = 1;
+    const int MAX_HEALTH = 3;
+    const int SCORE_PER_BRICK = 10;
+
+    // 初始位置偏移（像素）
+    const float BALL_Y_OFFSET = 50.0f;        // 球相对于屏幕中心的Y偏移
+    const float PADDLE_Y_OFFSET = 50.0f;      // 挡板距离底部的距离
+}
+
+// ---------- 全局变量 ----------
 enum GameState {
     STATE_MENU,
     STATE_PLAYING,
@@ -16,36 +61,29 @@ enum GameState {
 };
 
 GameState gameState = STATE_MENU;
-bool gameWin = false;   // true=胜利, false=失败
+bool gameWin = false;
 int score = 0;
-bool showHelp = false;   // 控制帮助窗口显示
+bool showHelp = false;
 
-// 物理世界与物体
 b2World* world = nullptr;
 b2Body* ball = nullptr;
 b2Body* paddle = nullptr;
 std::vector<b2Body*> bricks;
-std::vector<int> brickHealth;       // 与 bricks 同步的血量
-std::vector<sf::RectangleShape> sfBricks; // 图形
+std::vector<int> brickHealth;
+std::vector<sf::RectangleShape> sfBricks;
 
-// SFML 图形
 sf::CircleShape sfBall;
 sf::RectangleShape sfPaddle;
 
-// 坐标转换常量
-const float PPM = 30.0f;            // 像素/米
-const int WINDOW_W = 960;
-const int WINDOW_H = 540;
-
-std::random_device rd; // 随机数生成器
-std::mt19937 rng(rd()); // 随机数引擎
+std::random_device rd;
+std::mt19937 rng(rd());
 
 inline b2Vec2 toBox2D(const sf::Vector2f& pos) {
-    return { pos.x / PPM, (WINDOW_H - pos.y) / PPM };
+    return { pos.x / Config::PPM, (Config::WINDOW_H - pos.y) / Config::PPM };
 }
 
 inline sf::Vector2f toSFML(const b2Vec2& pos) {
-    return { pos.x * PPM, WINDOW_H - pos.y * PPM };
+    return { pos.x * Config::PPM, Config::WINDOW_H - pos.y * Config::PPM };
 }
 
 // ---------- 碰撞监听器 ----------
@@ -55,7 +93,6 @@ public:
         b2Body* bodyA = contact->GetFixtureA()->GetBody();
         b2Body* bodyB = contact->GetFixtureB()->GetBody();
 
-        // 判断球是否参与
         bool ballHit = false;
         b2Body* other = nullptr;
         if (bodyA == ball) {
@@ -68,45 +105,31 @@ public:
         }
 
         if (ballHit) {
-            // 如果碰撞对象是砖块或挡板，则加速
             if (other == paddle || std::find(bricks.begin(), bricks.end(), other) != bricks.end()) {
                 b2Vec2 vel = ball->GetLinearVelocity();
-                // 加速系数（可根据需要调整）
-                const float speedFactor = 1.05f;
-                vel.x *= speedFactor;
-                vel.y *= speedFactor;
-
-                // 限制最大速度
-                const float maxSpeed = 20.0f;
+                vel.x *= Config::SPEED_FACTOR;
+                vel.y *= Config::SPEED_FACTOR;
                 float speed = vel.Length();
-                if (speed > maxSpeed) {
-                    vel *= maxSpeed / speed;
+                if (speed > Config::MAX_BALL_SPEED) {
+                    vel *= Config::MAX_BALL_SPEED / speed;
                 }
-
                 ball->SetLinearVelocity(vel);
             }
 
-            // 判断球与砖块碰撞
             if ((bodyA == ball && bodyB != paddle) || (bodyB == ball && bodyA != paddle)) {
                 b2Body* brickBody = (bodyA == ball) ? bodyB : bodyA;
-                // 查找砖块索引
                 auto it = std::find(bricks.begin(), bricks.end(), brickBody);
                 if (it != bricks.end()) {
                     size_t idx = it - bricks.begin();
-                    // 减少血量
                     brickHealth[idx]--;
-                    // 更新颜色
                     if (brickHealth[idx] == 1) sfBricks[idx].setFillColor(sf::Color::Red);
                     else if (brickHealth[idx] == 2) sfBricks[idx].setFillColor(sf::Color::Green);
-                    // 血量3保持蓝色（已在创建时设置）
-                    // 如果血量为0，标记待销毁（不能在此处删除，因为正在遍历接触）
                     if (brickHealth[idx] == 0) {
-                        // 记录待销毁的砖块，稍后统一处理
                         toDestroy.push_back(brickBody);
                     }
                 }
             }
-            // 球与地面碰撞（失败）
+
             if ((bodyA == ball && bodyB == ground) || (bodyB == ball && bodyA == ground)) {
                 gameState = STATE_GAMEOVER;
                 gameWin = false;
@@ -114,18 +137,15 @@ public:
         }
     }
 
-    std::vector<b2Body*> toDestroy; // 存放需要销毁的砖块指针
-    b2Body* ground = nullptr;       // 地面刚体，由外部设置
+    std::vector<b2Body*> toDestroy;
+    b2Body* ground = nullptr;
 };
 
 ContactListener contactListener;
 
-
 // ---------- 重置游戏 ----------
 void resetGame() {
-    // 清理旧世界
     if (world) {
-        // 先销毁所有砖块刚体（因为世界销毁时会自动销毁，但我们需要清空容器）
         for (auto brick : bricks) world->DestroyBody(brick);
         if (ball) world->DestroyBody(ball);
         if (paddle) world->DestroyBody(paddle);
@@ -137,10 +157,7 @@ void resetGame() {
         contactListener.toDestroy.clear();
     }
 
-    // 创建新世界
-    world = new b2World(b2Vec2(0, 0)); // 无重力
-
-    // 设置碰撞监听器
+    world = new b2World(b2Vec2(0, 0));
     world->SetContactListener(&contactListener);
 
     // ----- 边界墙 -----
@@ -149,94 +166,89 @@ void resetGame() {
     b2PolygonShape wallShape;
 
     // 左墙
-    wallShape.SetAsBox(10.0f / PPM, WINDOW_H / 2 / PPM);
+    wallShape.SetAsBox(Config::WALL_THICKNESS / 2 / Config::PPM, Config::WINDOW_H / 2 / Config::PPM);
     b2Body* leftWall = world->CreateBody(&wallDef);
     leftWall->CreateFixture(&wallShape, 0);
-    leftWall->SetTransform(b2Vec2(10.0f / PPM, WINDOW_H / 2 / PPM), 0);
+    leftWall->SetTransform(b2Vec2(Config::WALL_THICKNESS / 2 / Config::PPM, Config::WINDOW_H / 2 / Config::PPM), 0);
 
     // 右墙
-    wallShape.SetAsBox(10.0f / PPM, WINDOW_H / 2 / PPM);
+    wallShape.SetAsBox(Config::WALL_THICKNESS / 2 / Config::PPM, Config::WINDOW_H / 2 / Config::PPM);
     b2Body* rightWall = world->CreateBody(&wallDef);
     rightWall->CreateFixture(&wallShape, 0);
-    rightWall->SetTransform(b2Vec2((WINDOW_W - 10.0f) / PPM, WINDOW_H / 2 / PPM), 0);
+    rightWall->SetTransform(b2Vec2((Config::WINDOW_W - Config::WALL_THICKNESS) / Config::PPM, Config::WINDOW_H / 2 / Config::PPM), 0);
 
-    // 天花板
-    wallShape.SetAsBox(WINDOW_W / 2 / PPM, 10.0f / PPM);
+    // 天花板（顶部）
+    wallShape.SetAsBox(Config::WINDOW_W / 2 / Config::PPM, Config::WALL_THICKNESS / 2 / Config::PPM);
     b2Body* ceiling = world->CreateBody(&wallDef);
     ceiling->CreateFixture(&wallShape, 0);
-    ceiling->SetTransform(b2Vec2(WINDOW_W / 2 / PPM, (WINDOW_H - 10.0f) / PPM), 0);
+    ceiling->SetTransform(b2Vec2(Config::WINDOW_W / 2 / Config::PPM, (Config::WINDOW_H - Config::WALL_THICKNESS / 2) / Config::PPM), 0);
 
-    // 地面（用于失败检测）
+    // 地面（底部，用于失败检测）
     b2BodyDef groundDef;
     groundDef.type = b2_staticBody;
     b2PolygonShape groundShape;
-    groundShape.SetAsBox(WINDOW_W / 2 / PPM, 10.0f / PPM);
+    groundShape.SetAsBox(Config::WINDOW_W / 2 / Config::PPM, Config::WALL_THICKNESS / 2 / Config::PPM);
     b2Body* ground = world->CreateBody(&groundDef);
     ground->CreateFixture(&groundShape, 0);
-    ground->SetTransform(b2Vec2(WINDOW_W / 2 / PPM, 10.0f / PPM), 0);
-    contactListener.ground = ground;   // 供监听器使用
+    ground->SetTransform(b2Vec2(Config::WINDOW_W / 2 / Config::PPM, Config::WALL_THICKNESS / 2 / Config::PPM), 0);
+    contactListener.ground = ground;
 
     // ----- 球 -----
     b2BodyDef ballDef;
     ballDef.type = b2_dynamicBody;
-    ballDef.position = toBox2D(sf::Vector2f(WINDOW_W / 2, WINDOW_H / 2 + 50));
+    ballDef.position = toBox2D(sf::Vector2f(Config::WINDOW_W / 2, Config::WINDOW_H / 2 + Config::BALL_Y_OFFSET));
     ball = world->CreateBody(&ballDef);
     b2CircleShape circle;
-    circle.m_radius = 12.0f / PPM;
+    circle.m_radius = Config::BALL_RADIUS / Config::PPM;
     b2FixtureDef ballFix;
     ballFix.shape = &circle;
-    ballFix.density = 1.0f;
-    ballFix.restitution = 1.0f;      // 完全弹性
+    ballFix.density = Config::BALL_DENSITY;
+    ballFix.restitution = Config::BALL_RESTITUTION;
     ball->CreateFixture(&ballFix);
-    ball->SetLinearVelocity(b2Vec2(200.0f / PPM, -200.0f / PPM));
-    ball->SetBullet(true);              // 防止高速穿透
+    ball->SetLinearVelocity(b2Vec2(Config::BALL_INIT_SPEED / Config::PPM, -Config::BALL_INIT_SPEED / Config::PPM));
+    ball->SetBullet(true);
 
     // ----- 挡板 -----
     b2BodyDef paddleDef;
     paddleDef.type = b2_kinematicBody;
-    paddleDef.position = toBox2D(sf::Vector2f(WINDOW_W / 2, WINDOW_H - 50));
+    paddleDef.position = toBox2D(sf::Vector2f(Config::WINDOW_W / 2, Config::WINDOW_H - Config::PADDLE_Y_OFFSET));
     paddle = world->CreateBody(&paddleDef);
     b2PolygonShape paddleShape;
-    paddleShape.SetAsBox(80.0f / PPM, 15.0f / PPM);
+    paddleShape.SetAsBox((Config::PADDLE_WIDTH / 2) / Config::PPM, (Config::PADDLE_HEIGHT / 2) / Config::PPM);
     b2FixtureDef paddleFix;
     paddleFix.shape = &paddleShape;
-    paddleFix.density = 1.0f;
-    paddleFix.restitution = 1.0f;
+    paddleFix.density = Config::PADDLE_DENSITY;
+    paddleFix.restitution = Config::PADDLE_RESTITUTION;
     paddle->CreateFixture(&paddleFix);
 
-    // ----- 砖块（随机生成，三种血量）-----
-    const int rows = 5, cols = 10;
-    const float startX = 80.0f, startY = 60.0f;
-    const float brickW = 70.0f, brickH = 25.0f;
-    const float spacingX = 80.0f, spacingY = 35.0f;
+    // ----- 砖块 -----
+    std::uniform_int_distribution<int> healthDist(Config::MIN_HEALTH, Config::MAX_HEALTH);
+    std::uniform_int_distribution<int> spawnDist(0, 99);
 
-    std::uniform_int_distribution<int> healthDist(1, 3);
-    std::uniform_int_distribution<int> spawnDist(0, 99); // 0~99
-
-    for (int r = 0; r < rows; ++r) {
-        for (int c = 0; c < cols; ++c) {
-            if (spawnDist(rng) >= 70) continue;   // 70% 生成概率
+    for (int r = 0; r < Config::BRICK_ROWS; ++r) {
+        for (int c = 0; c < Config::BRICK_COLS; ++c) {
+            if (spawnDist(rng) >= Config::BRICK_SPAWN_PROB) continue;
 
             int health = healthDist(rng);
-            float x = startX + c * spacingX;
-            float y = startY + r * spacingY;
+            float x = Config::BRICK_START_X + c * Config::BRICK_SPACING_X;
+            float y = Config::BRICK_START_Y + r * Config::BRICK_SPACING_Y;
+            float centerX = x + Config::BRICK_WIDTH / 2;
+            float centerY = y + Config::BRICK_HEIGHT / 2;
 
-            // 物理刚体
             b2BodyDef brickDef;
             brickDef.type = b2_staticBody;
-            brickDef.position = toBox2D(sf::Vector2f(x + brickW / 2, y + brickH / 2));
+            brickDef.position = toBox2D(sf::Vector2f(centerX, centerY));
             b2Body* brick = world->CreateBody(&brickDef);
             b2PolygonShape brickShape;
-            brickShape.SetAsBox(brickW / 2 / PPM, brickH / 2 / PPM);
+            brickShape.SetAsBox((Config::BRICK_WIDTH / 2) / Config::PPM, (Config::BRICK_HEIGHT / 2) / Config::PPM);
             brick->CreateFixture(&brickShape, 0);
 
             bricks.push_back(brick);
             brickHealth.push_back(health);
 
-            // SFML 图形
-            sf::RectangleShape rect(sf::Vector2f(brickW, brickH));
-            rect.setOrigin(sf::Vector2f(brickW / 2, brickH / 2));
-            rect.setPosition(sf::Vector2f(x + brickW / 2, y + brickH / 2));
+            sf::RectangleShape rect(sf::Vector2f(Config::BRICK_WIDTH, Config::BRICK_HEIGHT));
+            rect.setOrigin(sf::Vector2f(Config::BRICK_WIDTH / 2, Config::BRICK_HEIGHT / 2));
+            rect.setPosition(sf::Vector2f(centerX, centerY));
             if (health == 1) rect.setFillColor(sf::Color::Red);
             else if (health == 2) rect.setFillColor(sf::Color::Green);
             else rect.setFillColor(sf::Color::Blue);
@@ -245,25 +257,22 @@ void resetGame() {
     }
 
     // 初始化球和挡板图形
-    sfBall.setRadius(12);
+    sfBall.setRadius(Config::BALL_RADIUS);
     sfBall.setFillColor(sf::Color::White);
-    sfBall.setOrigin(sf::Vector2f(12, 12));
-    sfPaddle.setSize(sf::Vector2f(160, 30));
+    sfBall.setOrigin(sf::Vector2f(Config::BALL_RADIUS, Config::BALL_RADIUS));
+    sfPaddle.setSize(sf::Vector2f(Config::PADDLE_WIDTH, Config::PADDLE_HEIGHT));
     sfPaddle.setFillColor(sf::Color::White);
-    sfPaddle.setOrigin(sf::Vector2f(80, 15));
+    sfPaddle.setOrigin(sf::Vector2f(Config::PADDLE_WIDTH / 2, Config::PADDLE_HEIGHT / 2));
 
-    // 重置分数和胜利标志
     score = 0;
     gameWin = false;
 }
 
-
 // ---------- 游戏更新 ----------
 void updateGame() {
-    // 挡板控制
-    float paddle_speed = 300.0f / PPM; // 米/秒
+    float paddle_speed = Config::PADDLE_SPEED / Config::PPM;
     b2Vec2 paddle_vel(0, 0);
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left)||
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) ||
         sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
         paddle_vel.x = -paddle_speed;
     else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) ||
@@ -271,25 +280,23 @@ void updateGame() {
         paddle_vel.x = paddle_speed;
     paddle->SetLinearVelocity(paddle_vel);
 
-    // 物理步进
-    world->Step(1.0f / 60.0f, 8, 3);
+    world->Step(1.0f / Config::FRAME_LIMIT, 8, 3);
 
     // 挡板边界限制
-    float halfWidth = 80.0f / PPM;               // 挡板半宽（米）
-    float leftBound = 10.0f / PPM;               // 左墙内侧X
-    float rightBound = (WINDOW_W - 10.0f) / PPM; // 右墙内侧X
+    float halfWidth = (Config::PADDLE_WIDTH / 2) / Config::PPM;
+    float leftBound = Config::WALL_THICKNESS / Config::PPM;
+    float rightBound = (Config::WINDOW_W - Config::WALL_THICKNESS) / Config::PPM;
     b2Vec2 paddlePos = paddle->GetPosition();
     if (paddlePos.x < leftBound + halfWidth) {
         paddlePos.x = leftBound + halfWidth;
-        paddle->SetLinearVelocity(b2Vec2(0, 0)); // 停止移动
+        paddle->SetLinearVelocity(b2Vec2(0, 0));
     }
     else if (paddlePos.x > rightBound - halfWidth) {
         paddlePos.x = rightBound - halfWidth;
         paddle->SetLinearVelocity(b2Vec2(0, 0));
     }
-    paddle->SetTransform(paddlePos, 0);          // 更新位置
+    paddle->SetTransform(paddlePos, 0);
 
-    // 处理待销毁的砖块（从监听器中收集）
     for (b2Body* brick : contactListener.toDestroy) {
         auto it = std::find(bricks.begin(), bricks.end(), brick);
         if (it != bricks.end()) {
@@ -298,26 +305,23 @@ void updateGame() {
             bricks.erase(bricks.begin() + idx);
             brickHealth.erase(brickHealth.begin() + idx);
             sfBricks.erase(sfBricks.begin() + idx);
-            score += 10;   // 每块砖加10分
+            score += Config::SCORE_PER_BRICK;
         }
     }
     contactListener.toDestroy.clear();
 
-    // 胜利条件
     if (bricks.empty()) {
         gameState = STATE_GAMEOVER;
         gameWin = true;
         return;
     }
 
-    // 同步图形位置
     sfBall.setPosition(toSFML(ball->GetPosition()));
     sfPaddle.setPosition(toSFML(paddle->GetPosition()));
     for (size_t i = 0; i < bricks.size(); ++i) {
         sfBricks[i].setPosition(toSFML(bricks[i]->GetPosition()));
     }
 }
-
 
 // ---------- 渲染游戏 ----------
 void renderGame(sf::RenderWindow& window) {
@@ -329,7 +333,6 @@ void renderGame(sf::RenderWindow& window) {
 }
 
 // ---------- UI 窗口函数 ----------
-// 显示帮助窗口，提供游戏控制说明和砖块颜色对应的生命值信息
 void helpWindow(sf::RenderWindow& window, sf::Vector2u& winSize) {
     ImGui::SetNextWindowSize(ImVec2(400, 250), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowPos(ImVec2(winSize.x / 2.0f, winSize.y / 2.0f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
@@ -351,9 +354,7 @@ void helpWindow(sf::RenderWindow& window, sf::Vector2u& winSize) {
     ImGui::End();
 }
 
-// 显示主菜单窗口，提供开始游戏、帮助和退出选项
 void startMenu(sf::RenderWindow& window) {
-    // 居中窗口
     sf::Vector2u winSize = window.getSize();
     ImGui::SetNextWindowPos(ImVec2(winSize.x / 2.0f, winSize.y / 2.0f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowSize(ImVec2(250, 200), ImGuiCond_Always);
@@ -372,7 +373,7 @@ void startMenu(sf::RenderWindow& window) {
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
     if (ImGui::Button("Start Game", ImVec2(120, 40))) {
         gameState = STATE_PLAYING;
-        resetGame();   // 重置所有游戏数据（分数、球、砖块等）
+        resetGame();
     }
     ImGui::Spacing();
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
@@ -386,13 +387,11 @@ void startMenu(sf::RenderWindow& window) {
     }
     ImGui::End();
 
-    // 帮助窗口（仅在 showHelp 为 true 时显示）
     if (showHelp) {
         helpWindow(window, winSize);
     }
 }
 
-// 显示游戏结束窗口，显示胜利或失败信息以及最终分数，并提供返回主菜单的按钮
 void gameOver(sf::RenderWindow& window) {
     sf::Vector2u winSize = window.getSize();
     ImGui::SetNextWindowPos(ImVec2(winSize.x / 2.0f, winSize.y / 2.0f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
@@ -403,7 +402,6 @@ void gameOver(sf::RenderWindow& window) {
         ImGuiWindowFlags_NoMove |
         ImGuiWindowFlags_NoScrollbar);
 
-    // 显示胜利或失败信息
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 40);
     ImGui::SetWindowFontScale(1.3f);
     if (gameWin)
@@ -413,12 +411,10 @@ void gameOver(sf::RenderWindow& window) {
     ImGui::SetWindowFontScale(1.0f);
     ImGui::Spacing();
 
-    // 显示最终分数
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 30);
     ImGui::Text("Score: %d", score);
     ImGui::Spacing(); ImGui::Spacing();
 
-    // 重新开始按钮
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
     if (ImGui::Button("Restart", ImVec2(120, 40))) {
         resetGame();
@@ -426,16 +422,14 @@ void gameOver(sf::RenderWindow& window) {
     }
     ImGui::Spacing();
 
-    // 返回主菜单按钮
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
     if (ImGui::Button("Main Menu", ImVec2(120, 40))) {
         gameState = STATE_MENU;
-        resetGame();   // 重置游戏数据（可选）
+        resetGame();
     }
     ImGui::End();
 }
 
-// 显示分数的窗口，固定在左上角
 void showScore() {
     ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(100, 40), ImGuiCond_Always);
@@ -452,9 +446,8 @@ void showScore() {
 
 // ---------- 主函数 ----------
 int main() {
-    sf::RenderWindow window(sf::VideoMode({ 960, 540 }), "Breakout", sf::Style::Titlebar | sf::Style::Close);
-    window.setFramerateLimit(60);
-
+    sf::RenderWindow window(sf::VideoMode({ Config::WINDOW_W, Config::WINDOW_H }), "Breakout", sf::Style::Titlebar | sf::Style::Close);
+    window.setFramerateLimit(Config::FRAME_LIMIT);
     ImGui::SFML::Init(window);
 
     sf::Clock deltaClock;
@@ -467,20 +460,15 @@ int main() {
 
         ImGui::SFML::Update(window, deltaClock.restart());
 
-        // 主菜单
         if (gameState == STATE_MENU) {
-			startMenu(window);
+            startMenu(window);
         }
-
-        // 游戏进行中
-        if (gameState == STATE_PLAYING) {
+        else if (gameState == STATE_PLAYING) {
             showScore();
             updateGame();
         }
-
-        // 胜利/失败窗口
-        if (gameState == STATE_GAMEOVER) {
-			gameOver(window);
+        else if (gameState == STATE_GAMEOVER) {
+            gameOver(window);
         }
 
         window.clear();
@@ -490,5 +478,6 @@ int main() {
     }
 
     ImGui::SFML::Shutdown();
+    if (world) delete world;
     return 0;
 }
