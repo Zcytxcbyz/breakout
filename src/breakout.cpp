@@ -473,6 +473,9 @@ int main() {
     window.setFramerateLimit(Config::FRAME_LIMIT);
     ImGui::SFML::Init(window);
 
+    ImGuiIO& io = ImGui::GetIO();
+    io.IniFilename = nullptr;
+
     sf::Clock deltaClock;
     while (window.isOpen()) {
         while (const auto event = window.pollEvent()) {
