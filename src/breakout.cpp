@@ -409,7 +409,7 @@ void startMenu(sf::RenderWindow& window) {
     // Display main menu window at screen center, containing game title and option buttons
     sf::Vector2u winSize = window.getSize();
     ImGui::SetNextWindowPos(ImVec2(winSize.x / 2.0f, winSize.y / 2.0f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(250, 200), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiCond_Always);
     ImGui::Begin(Texts::MainMenu, nullptr,
         ImGuiWindowFlags_NoTitleBar |
         ImGuiWindowFlags_NoResize |
