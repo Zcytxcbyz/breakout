@@ -26,7 +26,7 @@ namespace Config {
     const float BALL_INIT_SPEED = 200.0f;   // Pixels per second
     const float MAX_BALL_SPEED = 20.0f;     // Meters per second (physics units)
     const float SPEED_FACTOR = 1.05f;       // Speed multiplier after each collision
-    const float GRAVITY = 2.0f;             // Gravity strength (physics units, applied as downward force on the ball)
+    const float GRAVITY = 1.0f;             // Gravity strength (physics units, applied as downward force on the ball)
 
     // Paddle parameters (pixel units)
     const float PADDLE_WIDTH = 160.0f;      // Paddle width (pixels)
