@@ -33,7 +33,7 @@ void renderGame(sf::RenderWindow& window) {
 }
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode({ 1280, 720 }), "Breakout", sf::Style::Titlebar | sf::Style::Close);
+    sf::RenderWindow window(sf::VideoMode({ 960, 540 }), "Breakout", sf::Style::Titlebar | sf::Style::Close);
     window.setFramerateLimit(60);
 
     ImGui::SFML::Init(window);
@@ -53,7 +53,7 @@ int main() {
             // 居中窗口
             sf::Vector2u winSize = window.getSize();
             ImGui::SetNextWindowPos(ImVec2(winSize.x / 2.0f, winSize.y / 2.0f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-            ImGui::SetNextWindowSize(ImVec2(300, 180), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(ImVec2(250, 150), ImGuiCond_Always);
             ImGui::Begin("MainMenu", nullptr,
                 ImGuiWindowFlags_NoTitleBar |
                 ImGuiWindowFlags_NoResize |
@@ -71,13 +71,17 @@ int main() {
                 gameState = STATE_PLAYING;
                 resetGame();   // 重置所有游戏数据（分数、球、砖块等）
             }
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
+            if (ImGui::Button("Exit Game", ImVec2(120, 40))) {
+                window.close();
+            }
             ImGui::End();
         }
 
         // ========== 2. 游戏进行中的分数窗口 ==========
         if (gameState == STATE_PLAYING) {
             ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
-            ImGui::SetNextWindowSize(ImVec2(200, 60), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(ImVec2(100, 40), ImGuiCond_Always);
             ImGui::SetNextWindowBgAlpha(0.5f);
             ImGui::Begin("Score", nullptr,
                 ImGuiWindowFlags_NoTitleBar |
