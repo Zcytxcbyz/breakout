@@ -77,7 +77,7 @@ public:
                 vel.y *= speedFactor;
 
                 // 限制最大速度
-                const float maxSpeed = 15.0f;
+                const float maxSpeed = 20.0f;
                 float speed = vel.Length();
                 if (speed > maxSpeed) {
                     vel *= maxSpeed / speed;
@@ -188,7 +188,8 @@ void resetGame() {
     ballFix.density = 1.0f;
     ballFix.restitution = 1.0f;      // 完全弹性
     ball->CreateFixture(&ballFix);
-    ball->SetLinearVelocity(b2Vec2(150.0f / PPM, -150.0f / PPM));
+    ball->SetLinearVelocity(b2Vec2(200.0f / PPM, -200.0f / PPM));
+    ball->SetBullet(true);              // 防止高速穿透
 
     // ----- 挡板 -----
     b2BodyDef paddleDef;
