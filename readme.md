@@ -78,11 +78,11 @@ This script requires **Python 3** and **Git** to be installed and available in y
    ```
 
 3. **Generate project files**  
-   Open a terminal and execute the following commands (using Visual Studio 2022 as an example):
+   Open a terminal and execute the following commands (using Visual Studio 2026 as an example):
    ```bash
    mkdir build
    cd build
-   cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+   cmake .. -G "Visual Studio 18 2026" -A x64 -DCMAKE_BUILD_TYPE=Release
    ```
 
 4. **Compile**  
