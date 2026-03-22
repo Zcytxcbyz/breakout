@@ -21,23 +21,15 @@ b2BodyId paddle;
 std::vector<b2BodyId> bricks;
 
 void resetGame() {
-    // 重置分数
-    score = 0;
-    gameWin = false;
 
-    // 如果已有世界，先销毁
-    if (worldId.index1) {
-        for (auto brick : bricks) b2DestroyBody(brick);
-        b2DestroyBody(ball);
-        b2DestroyBody(paddle);
-        b2DestroyWorld(worldId);
-        bricks.clear();
-    }
+}
 
-    // 创建世界（无重力）
-    b2WorldDef worldDef = b2DefaultWorldDef();
-    worldDef.gravity = { 0, 0 };
-    worldId = b2CreateWorld(&worldDef);
+void updateGame(sf::RenderWindow& window) {
+
+}
+
+void renderGame(sf::RenderWindow& window) {
+
 }
 
 int main() {
@@ -95,6 +87,8 @@ int main() {
             ImGui::SetWindowFontScale(1.2f);
             ImGui::Text("Score: %d", score);
             ImGui::End();
+
+            updateGame(window);
         }
 
         // ========== 3. 胜利/失败窗口 ==========
@@ -133,6 +127,7 @@ int main() {
         }
 
         window.clear();
+        renderGame(window);
         ImGui::SFML::Render(window);
         window.display();
     }
