@@ -278,8 +278,8 @@ void InitSound() {
 void cleanupSound() {
     if(hitBrickSound) delete hitBrickSound;
     if(hitPaddleSound) delete hitPaddleSound;
-    if(hitPaddleSound) delete clickSound;
-    if(hitPaddleSound) delete hoverSound;
+    if(clickSound) delete clickSound;
+    if(hoverSound) delete hoverSound;
 }
 
 // ---------- Reset Game ----------
