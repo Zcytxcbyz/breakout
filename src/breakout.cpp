@@ -34,7 +34,7 @@ namespace Config {
     // Paddle parameters (pixel units)
     const float PADDLE_WIDTH = 160.0f;      // Paddle width (pixels)
     const float PADDLE_HEIGHT = 30.0f;      // Paddle height (pixels)
-    const float PADDLE_SPEED = 300.0f;      // Pixels per second
+    const float PADDLE_SPEED = 500.0f;      // Pixels per second
     const float PADDLE_DENSITY = 1.0f;      // Density (physics units)
     const float PADDLE_RESTITUTION = 1.0f;  // Restitution coefficient (physics units)
 
