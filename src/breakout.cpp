@@ -532,24 +532,24 @@ void startMenu(sf::RenderWindow& window) {
 
     // Start Game button resets the game state and starts a new game
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
-    if (ImGui::Button(Texts::StartGame, ImVec2(120, 40))) {
+    ButtonWithSound(Texts::StartGame, ImVec2(120, 40), [&] {
         gameState = STATE_PLAYING;
         resetGame();
-    }
+        });
     ImGui::Spacing();
 
     // Help button shows the help window, which contains game control instructions and objective explanation
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
-    if (ImGui::Button(Texts::Help, ImVec2(120, 40))) {
+    ButtonWithSound(Texts::Help, ImVec2(120, 40), [&] {
         showHelp = true;
-    }
+        });
     ImGui::Spacing();
 
     // Exit button closes the game
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
-    if (ImGui::Button(Texts::Exit, ImVec2(120, 40))) {
+    ButtonWithSound(Texts::Exit, ImVec2(120, 40), [&] {
         window.close();
-    }
+        });
     ImGui::End();
 
     // If the help window is triggered, display it on top of the main menu
@@ -587,18 +587,18 @@ void gameOver(sf::RenderWindow& window) {
 
     // Restart button resets the game state and starts a new game
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
-    if (ImGui::Button(Texts::Restart, ImVec2(120, 40))) {
+    ButtonWithSound(Texts::Restart, ImVec2(120, 40), [&] {
         resetGame();
         gameState = STATE_PLAYING;
-    }
+        });
     ImGui::Spacing();
 
     // Main Menu button returns to the main menu and resets the game state
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
-    if (ImGui::Button(Texts::MainMenu, ImVec2(120, 40))) {
+    ButtonWithSound(Texts::MainMenu, ImVec2(120, 40), [&] {
         gameState = STATE_MENU;
         resetGame();
-    }
+        });
     ImGui::End();
 }
 
@@ -639,17 +639,17 @@ void pauseMenu(sf::RenderWindow& window) {
 
     // Resume button resumes the game and returns to playing state
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
-    if (ImGui::Button(Texts::Resume, ImVec2(120, 40))) {
+    ButtonWithSound(Texts::Resume, ImVec2(120, 40), [&] {
         gameState = STATE_PLAYING;
-    }
+        });
     ImGui::Spacing();
 
     // Main Menu button returns to the main menu and resets the game state
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
-    if (ImGui::Button(Texts::MainMenu, ImVec2(120, 40))) {
+    ButtonWithSound(Texts::MainMenu, ImVec2(120, 40), [&] {
         gameState = STATE_MENU;
         resetGame(); // Reset game state when returning to main menu
-    }
+        });
     ImGui::End();
 }
 
