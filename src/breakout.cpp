@@ -116,8 +116,12 @@ std::mt19937 rng(rd()); // Random number generator
 
 sf::SoundBuffer hitBrickBuffer;             // Sound buffer for hitting bricks
 sf::SoundBuffer hitPaddleBuffer;            // Sound buffer for hitting paddle
+sf::SoundBuffer clickBuffer;                // Sound buffer for button clicks
+sf::SoundBuffer hoverBuffer;                // Sound buffer for button hover
 sf::Sound* hitBrickSound = nullptr;         // Sound object for playing brick hit sound
 sf::Sound* hitPaddleSound = nullptr;        // Sound object for playing paddle hit sound
+sf::Sound* clickSound = nullptr;            // Sound object for playing button click sound
+sf::Sound* hoverSound = nullptr;            // Sound object for playing button hover sound
 
 // ---------- Coordinate Conversion Functions ----------
 inline b2Vec2 toBox2D(const sf::Vector2f& pos) {
@@ -225,6 +229,57 @@ sf::SoundBuffer generateHitSound(float frequency = 440.0f, float duration = 0.1f
     sf::SoundBuffer buffer;
     buffer.loadFromSamples(samples.data(), samples.size(), 1, sampleRate, channelMap);
     return buffer;
+}
+
+// ---------- Button with Sound Effect ----------
+bool ButtonWithSound(const char* label, const ImVec2& size, std::function<void()> onClick) {
+    // Record hover state (using button label as the only identifier)
+    static std::unordered_map<std::string, bool> hoverStateMap;
+    bool& wasHovered = hoverStateMap[label];  // Default false
+
+    // Check if the button is clicked
+    bool clicked = false;
+    if (ImGui::Button(label, size)) {
+        if (clickSound) clickSound->play();
+        if (onClick) onClick(); // Call the provided click handler  
+        clicked = true;
+    }
+
+    // Check hover state and play hover sound on transition from not hovered to hovered
+    bool isHovered = ImGui::IsItemHovered();
+    if (isHovered && !wasHovered) {
+        if (hoverSound) hoverSound->play();
+    }
+    wasHovered = isHovered;
+
+    return clicked;
+}
+
+// ---------- Sound Initialization ----------
+void InitSound() {
+    // Generate a higher-pitched, shorter sound for hitting bricks to differentiate it from hitting the paddle
+    hitBrickBuffer = generateHitSound(600.0f, 0.08f, 0.6f);
+    hitBrickSound = new sf::Sound(hitBrickBuffer);
+
+    // Generate a lower-pitched, longer sound for hitting the paddle to differentiate it from hitting bricks
+    hitPaddleBuffer = generateHitSound(300.0f, 0.1f, 0.5f);
+    hitPaddleSound = new sf::Sound(hitPaddleBuffer);
+
+    // Generate distinct click and hover sounds for UI interactions to enhance feedback
+    clickBuffer = generateHitSound(880.0f, 0.05f, 0.4f);
+    clickSound = new sf::Sound(clickBuffer);
+
+    // Generate a softer, higher-pitched sound for button hover to differentiate it from clicks and in-game hits
+    hoverBuffer = generateHitSound(440.0f, 0.04f, 0.3f);
+    hoverSound = new sf::Sound(hoverBuffer);
+}
+
+// ---------- Sound Cleanup ----------
+void cleanupSound() {
+    if(hitBrickSound) delete hitBrickSound;
+    if(hitPaddleSound) delete hitPaddleSound;
+    if(hitPaddleSound) delete clickSound;
+    if(hitPaddleSound) delete hoverSound;
 }
 
 // ---------- Reset Game ----------
@@ -610,14 +665,7 @@ int main() {
     io.IniFilename = nullptr;
 
     resetGame(); // Create physical world and game objects in advance
-
-    // Generate a higher-pitched, shorter sound for hitting bricks to differentiate it from hitting the paddle
-    hitBrickBuffer = generateHitSound(600.0f, 0.08f, 0.6f);
-    hitBrickSound = new sf::Sound(hitBrickBuffer);
-
-    // Generate a lower-pitched, longer sound for hitting the paddle to differentiate it from hitting bricks
-    hitPaddleBuffer = generateHitSound(300.0f, 0.1f, 0.5f);
-    hitPaddleSound = new sf::Sound(hitPaddleBuffer);
+    InitSound(); // Initialize sound effects in advance to avoid delay on first play
 
     // Main loop
     sf::Clock deltaClock;
@@ -669,7 +717,6 @@ int main() {
     // Clean up resources
     ImGui::SFML::Shutdown();
     if (world) delete world;
-    if (hitBrickSound) delete hitBrickSound;
-    if (hitPaddleSound) delete hitPaddleSound;
+    cleanupSound();
     return 0;
 }
