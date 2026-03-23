@@ -67,6 +67,7 @@ namespace Texts {
     const char* BrickHealth = "Brick Health (Color -> Hits):";      // Brick health explanation
     const char* MoveRight = "Move Right: D / Right Arrow";          // Move right explanation
     const char* MoveLeft = "Move Left: A / Left Arrow";             // Move left explanation
+    const char* PauseHelp = "Pause: P / ESC";                       // Pause explanation
     const char* RedHit = "Red   -> 1 hit";                          // Red brick explanation
     const char* GreenHit = "Green -> 2 hits";                       // Green brick explanation
     const char* BlueHit = "Blue  -> 3 hits";                        // Blue brick explanation
@@ -78,6 +79,9 @@ namespace Texts {
     const char* GameOver = "Game Over";                             // Failure text
     const char* Restart = "Restart";                                // Restart button text
     const char* MainMenu = "Main Menu";                             // Main menu button text
+    const char* Paused = "Paused";                                  // Paused text
+    const char* Resume = "Resume";                                  // Resume button text
+    const char* GamePaused = "Game Paused";                         // Game paused text
 }
 
 // ---------- Global Variables ----------
@@ -85,7 +89,8 @@ namespace Texts {
 enum GameState {
     STATE_MENU,         // Main menu
     STATE_PLAYING,      // Game in progress
-    STATE_GAMEOVER      // Game over
+    STATE_GAMEOVER,     // Game over
+    STATE_PAUSED        // Game paused
 };
 
 GameState gameState = STATE_MENU;           // Current game state
@@ -303,9 +308,11 @@ void resetGame() {
     sfBall.setRadius(Config::BALL_RADIUS);
     sfBall.setFillColor(sf::Color::White);
     sfBall.setOrigin(sf::Vector2f(Config::BALL_RADIUS, Config::BALL_RADIUS));
+    sfBall.setPosition(toSFML(ball->GetPosition()));
     sfPaddle.setSize(sf::Vector2f(Config::PADDLE_WIDTH, Config::PADDLE_HEIGHT));
     sfPaddle.setFillColor(sf::Color::White);
     sfPaddle.setOrigin(sf::Vector2f(Config::PADDLE_WIDTH / 2, Config::PADDLE_HEIGHT / 2));
+    sfPaddle.setPosition(toSFML(paddle->GetPosition()));
 
     // Reset score and game state
     score = 0;
@@ -390,6 +397,7 @@ void helpWindow(sf::RenderWindow& window, sf::Vector2u& winSize) {
     ImGui::Text(Texts::Controls);
     ImGui::BulletText(Texts::MoveLeft);
     ImGui::BulletText(Texts::MoveRight);
+    ImGui::BulletText(Texts::PauseHelp);
     ImGui::Separator();
     ImGui::Text(Texts::BrickHealth);
     ImGui::BulletText(Texts::RedHit);
@@ -416,29 +424,36 @@ void startMenu(sf::RenderWindow& window) {
         ImGuiWindowFlags_NoMove |
         ImGuiWindowFlags_NoScrollbar);
 
+    // Display game title at the top center of the menu
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 40);
     ImGui::SetWindowFontScale(1.5f);
     ImGui::Text(Texts::GameName);
     ImGui::SetWindowFontScale(1.0f);
     ImGui::Spacing(); ImGui::Spacing();
 
+    // Start Game button resets the game state and starts a new game
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
     if (ImGui::Button(Texts::StartGame, ImVec2(120, 40))) {
         gameState = STATE_PLAYING;
         resetGame();
     }
     ImGui::Spacing();
+
+    // Help button shows the help window, which contains game control instructions and objective explanation
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
     if (ImGui::Button(Texts::Help, ImVec2(120, 40))) {
         showHelp = true;
     }
     ImGui::Spacing();
+
+    // Exit button closes the game
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
     if (ImGui::Button(Texts::Exit, ImVec2(120, 40))) {
         window.close();
     }
     ImGui::End();
 
+    // If the help window is triggered, display it on top of the main menu
     if (showHelp) {
         helpWindow(window, winSize);
     }
@@ -456,6 +471,7 @@ void gameOver(sf::RenderWindow& window) {
         ImGuiWindowFlags_NoMove |
         ImGuiWindowFlags_NoScrollbar);
 
+    // Display game over or victory text at the top center of the window, colored green for victory and red for defeat
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 40);
     ImGui::SetWindowFontScale(1.3f);
     if (gameWin)
@@ -465,10 +481,12 @@ void gameOver(sf::RenderWindow& window) {
     ImGui::SetWindowFontScale(1.0f);
     ImGui::Spacing();
 
+    // Display final score below the game over/victory text, centered horizontally
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 30);
     ImGui::Text(Texts::ScoreFormat, score);
     ImGui::Spacing(); ImGui::Spacing();
 
+    // Restart button resets the game state and starts a new game
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
     if (ImGui::Button(Texts::Restart, ImVec2(120, 40))) {
         resetGame();
@@ -476,6 +494,7 @@ void gameOver(sf::RenderWindow& window) {
     }
     ImGui::Spacing();
 
+    // Main Menu button returns to the main menu and resets the game state
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
     if (ImGui::Button(Texts::MainMenu, ImVec2(120, 40))) {
         gameState = STATE_MENU;
@@ -500,6 +519,41 @@ void showScore() {
     ImGui::End();
 }
 
+// ---------- Pause Menu ----------
+void pauseMenu(sf::RenderWindow& window) {
+    // Display pause menu at screen center, containing pause text and option buttons to resume or return to main menu
+    sf::Vector2u winSize = window.getSize();
+    ImGui::SetNextWindowPos(ImVec2(winSize.x / 2.0f, winSize.y / 2.0f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+    ImGui::SetNextWindowSize(ImVec2(300, 160), ImGuiCond_Always);
+    ImGui::Begin(Texts::Paused, nullptr,
+        ImGuiWindowFlags_NoTitleBar |
+        ImGuiWindowFlags_NoResize |
+        ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_NoScrollbar);
+
+    // Display "Game Paused" text at the top center of the window
+    ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 56);
+    ImGui::SetWindowFontScale(1.5f);
+    ImGui::Text(Texts::GamePaused);
+    ImGui::SetWindowFontScale(1.0f);
+    ImGui::Spacing(); ImGui::Spacing();
+
+    // Resume button resumes the game and returns to playing state
+    ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
+    if (ImGui::Button(Texts::Resume, ImVec2(120, 40))) {
+        gameState = STATE_PLAYING;
+    }
+    ImGui::Spacing();
+
+    // Main Menu button returns to the main menu and resets the game state
+    ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
+    if (ImGui::Button(Texts::MainMenu, ImVec2(120, 40))) {
+        gameState = STATE_MENU;
+        resetGame(); // Reset game state when returning to main menu
+    }
+    ImGui::End();
+}
+
 // ---------- Main Function ----------
 int main() {
     // Create SFML window
@@ -511,14 +565,27 @@ int main() {
     ImGuiIO& io = ImGui::GetIO();
     io.IniFilename = nullptr;
 
+    resetGame(); // Create physical world and game objects in advance
+
     // Main loop
     sf::Clock deltaClock;
     while (window.isOpen()) {
         // Process events
         while (const auto event = window.pollEvent()) {
             ImGui::SFML::ProcessEvent(window, *event);
+
+            // Handle window close event and pause/unpause game with Escape or P key
             if (event->is<sf::Event::Closed>())
                 window.close();
+
+            // Toggle pause state when Escape or P key is pressed
+            if (const auto* keyEvent = event->getIf<sf::Event::KeyPressed>()) {
+                if (keyEvent->code == sf::Keyboard::Key::Escape
+                    || keyEvent->code == sf::Keyboard::Key::P) {
+                    if (gameState == STATE_PLAYING) gameState = STATE_PAUSED;
+                    else if (gameState == STATE_PAUSED) gameState = STATE_PLAYING;
+                }
+            }
         }
 
         // Update ImGui state
@@ -531,6 +598,10 @@ int main() {
         else if (gameState == STATE_PLAYING) {
             showScore();
             updateGame();
+        }
+        else if (gameState == STATE_PAUSED) {
+            showScore();
+            pauseMenu(window);
         }
         else if (gameState == STATE_GAMEOVER) {
             gameOver(window);

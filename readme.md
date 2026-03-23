@@ -21,10 +21,11 @@ A brick breaker game based on the **Box2D** physics engine and **SFML** graphics
 
 ## 🎮 Controls
 
-| Key              | Function       |
-|------------------|----------------|
-| `A` / `←`        | Move paddle left |
+| Key              | Function          |
+|------------------|-------------------|
+| `A` / `←`        | Move paddle left  |
 | `D` / `→`        | Move paddle right |
+| `P` / `ESC`      | Pause game        |
 
 Objective: Break all bricks. If the ball falls off the bottom, the game ends in defeat.
 
