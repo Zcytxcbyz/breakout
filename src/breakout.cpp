@@ -490,9 +490,21 @@ void renderGame(sf::RenderWindow& window) {
 // ---------- UI Window Functions ----------
 void helpWindow(sf::RenderWindow& window, sf::Vector2u& winSize) {
     // Display help window at screen center, containing game control instructions and objective explanation
-    ImGui::SetNextWindowSize(ImVec2(400, 250), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(280, 260), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowPos(ImVec2(winSize.x / 2.0f, winSize.y / 2.0f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
-    ImGui::Begin(Texts::Help, &showHelp, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
+
+    ImGui::Begin(Texts::Help, &showHelp,
+        ImGuiWindowFlags_NoTitleBar |
+        ImGuiWindowFlags_NoResize |
+        ImGuiWindowFlags_NoScrollbar);
+
+    // Help window title with close button at the top right corner
+    float windowWidth = ImGui::GetWindowWidth();
+    ImGui::Text(Texts::Help);
+    ImGui::SameLine(windowWidth - 30);
+    ButtonWithSound("X", ImVec2(20, 20), [&] { showHelp = false; });
+    ImGui::Separator();
+    ImGui::Spacing(); ImGui::Spacing();
 
     // Controls explanation with bullet points for each control action
     ImGui::Text(Texts::Controls);
@@ -510,9 +522,10 @@ void helpWindow(sf::RenderWindow& window, sf::Vector2u& winSize) {
     // Game objective explanation at the bottom of the help window
     ImGui::Separator();
     ImGui::Text(Texts::DestroyAll);
-    ImGui::Spacing();
+    ImGui::Spacing(); ImGui::Spacing();
 
     // Close button at the bottom center of the window
+    ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 40);
     if (ImGui::Button(Texts::Close, ImVec2(80, 30))) {
         showHelp = false;
     }
