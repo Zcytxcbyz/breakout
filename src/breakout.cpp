@@ -493,18 +493,26 @@ void helpWindow(sf::RenderWindow& window, sf::Vector2u& winSize) {
     ImGui::SetNextWindowSize(ImVec2(400, 250), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowPos(ImVec2(winSize.x / 2.0f, winSize.y / 2.0f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
     ImGui::Begin(Texts::Help, &showHelp, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
+
+    // Controls explanation with bullet points for each control action
     ImGui::Text(Texts::Controls);
     ImGui::BulletText(Texts::MoveLeft);
     ImGui::BulletText(Texts::MoveRight);
     ImGui::BulletText(Texts::PauseHelp);
     ImGui::Separator();
+
+    // Brick health explanation
     ImGui::Text(Texts::BrickHealth);
     ImGui::BulletText(Texts::RedHit);
     ImGui::BulletText(Texts::GreenHit);
     ImGui::BulletText(Texts::BlueHit);
+
+    // Game objective explanation at the bottom of the help window
     ImGui::Separator();
     ImGui::Text(Texts::DestroyAll);
     ImGui::Spacing();
+
+    // Close button at the bottom center of the window
     if (ImGui::Button(Texts::Close, ImVec2(80, 30))) {
         showHelp = false;
     }
