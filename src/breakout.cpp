@@ -193,20 +193,20 @@ public:
 
             // Play the appropriate sound effect based on what was hit
             if (isBrick) {
-                hitBrickSound->play(); // Play brick hit sound
+                if(hitBrickSound) hitBrickSound->play(); // Play brick hit sound
             }
             else if (other == paddle) {
-                hitPaddleSound->play(); // Play paddle hit sound
+                if(hitPaddleSound) hitPaddleSound->play(); // Play paddle hit sound
             }
             else if (other != ground) {
-                wallSound->play();      // Play wall hit sound for hitting walls
+                if(wallSound) wallSound->play();      // Play wall hit sound for hitting walls
             }
 
             // If the collided object is the ground, game over
             if ((bodyA == ball && bodyB == ground) || (bodyB == ball && bodyA == ground)) {
                 gameState = STATE_GAMEOVER;
                 gameWin = false;
-                loseSound->play(); // Play lose sound when hitting the ground
+                if(loseSound) loseSound->play(); // Play lose sound when hitting the ground
             }
         }
     }
@@ -493,7 +493,7 @@ void updateGame() {
     if (bricks.empty()) {
         gameState = STATE_GAMEOVER;
         gameWin = true;
-        winSound->play(); // Play win sound effect on victory
+        if(winSound) winSound->play(); // Play win sound effect on victory
         return;
     }
 
