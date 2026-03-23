@@ -58,6 +58,11 @@ target_include_directories(imgui-sfml PUBLIC libs/imgui libs/imgui-sfml)
 # ========== Main Program ==========
 add_executable(breakout "src/breakout.cpp")
 
+# Resource file for Windows
+if(WIN32)
+    target_sources(breakout PRIVATE "resource.rc")
+endif()
+
 # Hide console in Release (already present)
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     target_link_options(breakout PRIVATE /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup)

@@ -1,6 +1,11 @@
 // Breakout - Brick Breaker Game Based on Box2D and SFML
 
 // ---------- Header Files ----------
+#ifdef _WIN32
+#define NOMINMAX
+#include <windows.h>
+#endif
+
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include <imgui.h>
@@ -707,6 +712,19 @@ int main() {
     sf::RenderWindow window(sf::VideoMode({ Config::WINDOW_W, Config::WINDOW_H }), Texts::GameName, sf::Style::Titlebar | sf::Style::Close);
     window.setFramerateLimit(Config::FRAME_LIMIT);
     ImGui::SFML::Init(window);
+
+    // Set custom window icon (requires an icon resource with ID 1 in the executable)
+#ifdef _WIN32
+    HWND hwnd = window.getNativeHandle();
+    HICON hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(1));
+    if (hIcon) {
+        SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+        SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+        SetClassLongPtr(hwnd, GCLP_HICON, (LONG_PTR)hIcon);
+        SetClassLongPtr(hwnd, GCLP_HICONSM, (LONG_PTR)hIcon);
+        SendMessage(hwnd, WM_NCACTIVATE, TRUE, 0);
+    }
+#endif
 
     // Disable ImGui automatic window position and size saving
     ImGuiIO& io = ImGui::GetIO();
