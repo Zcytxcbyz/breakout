@@ -118,10 +118,16 @@ sf::SoundBuffer hitBrickBuffer;             // Sound buffer for hitting bricks
 sf::SoundBuffer hitPaddleBuffer;            // Sound buffer for hitting paddle
 sf::SoundBuffer clickBuffer;                // Sound buffer for button clicks
 sf::SoundBuffer hoverBuffer;                // Sound buffer for button hover
+sf::SoundBuffer wallBuffer;                 // Sound buffer for hitting walls
+sf::SoundBuffer winBuffer;                  // Sound buffer for winning the game
+sf::SoundBuffer loseBuffer;                 // Sound buffer for losing the game
 sf::Sound* hitBrickSound = nullptr;         // Sound object for playing brick hit sound
 sf::Sound* hitPaddleSound = nullptr;        // Sound object for playing paddle hit sound
 sf::Sound* clickSound = nullptr;            // Sound object for playing button click sound
 sf::Sound* hoverSound = nullptr;            // Sound object for playing button hover sound
+sf::Sound* wallSound = nullptr;             // Sound object for playing wall hit sound
+sf::Sound* winSound = nullptr;              // Sound object for playing win sound
+sf::Sound* loseSound = nullptr;             // Sound object for playing lose sound
 
 // ---------- Coordinate Conversion Functions ----------
 inline b2Vec2 toBox2D(const sf::Vector2f& pos) {
@@ -192,11 +198,15 @@ public:
             else if (other == paddle) {
                 hitPaddleSound->play(); // Play paddle hit sound
             }
+            else if (other != ground) {
+                wallSound->play();      // Play wall hit sound for hitting walls
+            }
 
             // If the collided object is the ground, game over
             if ((bodyA == ball && bodyB == ground) || (bodyB == ball && bodyA == ground)) {
                 gameState = STATE_GAMEOVER;
                 gameWin = false;
+                loseSound->play(); // Play lose sound when hitting the ground
             }
         }
     }
@@ -272,6 +282,19 @@ void InitSound() {
     // Generate a softer, higher-pitched sound for button hover to differentiate it from clicks and in-game hits
     hoverBuffer = generateHitSound(440.0f, 0.04f, 0.3f);
     hoverSound = new sf::Sound(hoverBuffer);
+
+    // Generate a solid, mid-frequency sound for hitting walls to differentiate it from hitting bricks and the paddle
+    wallBuffer = generateHitSound(400.0f, 0.06f, 0.5f);
+    wallSound = new sf::Sound(wallBuffer);
+
+    // Generate a bright, celebratory sound for winning the game to provide positive feedback
+    winBuffer = generateHitSound(523.0f, 0.2f, 0.6f);
+    winSound = new sf::Sound(winBuffer);
+
+    // Generate a somber, lower-pitched sound for losing the game to provide appropriate feedback
+    loseBuffer = generateHitSound(220.0f, 0.15f, 0.5f);
+    loseSound = new sf::Sound(loseBuffer);
+
 }
 
 // ---------- Sound Cleanup ----------
@@ -280,6 +303,9 @@ void cleanupSound() {
     if(hitPaddleSound) delete hitPaddleSound;
     if(clickSound) delete clickSound;
     if(hoverSound) delete hoverSound;
+    if(wallSound) delete wallSound;
+    if(winSound) delete winSound;
+    if(loseSound) delete loseSound;
 }
 
 // ---------- Reset Game ----------
@@ -467,6 +493,7 @@ void updateGame() {
     if (bricks.empty()) {
         gameState = STATE_GAMEOVER;
         gameWin = true;
+        winSound->play(); // Play win sound effect on victory
         return;
     }
 
