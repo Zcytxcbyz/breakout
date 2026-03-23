@@ -499,9 +499,9 @@ void helpWindow(sf::RenderWindow& window, sf::Vector2u& winSize) {
         ImGuiWindowFlags_NoScrollbar);
 
     // Help window title with close button at the top right corner
-    float windowWidth = ImGui::GetWindowWidth();
+    float availWidth = ImGui::GetContentRegionAvail().x;
     ImGui::Text(Texts::Help);
-    ImGui::SameLine(windowWidth - 30);
+    ImGui::SameLine(availWidth - 10);
     ButtonWithSound("X", ImVec2(20, 20), [&] { showHelp = false; });
     ImGui::Separator();
     ImGui::Spacing(); ImGui::Spacing();
