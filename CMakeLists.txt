@@ -21,7 +21,7 @@ if(MSVC)
 endif()
 
 # ========== SFML (source subdirectory) ==========
-set(SFML_BUILD_AUDIO OFF CACHE BOOL "" FORCE)
+set(SFML_BUILD_AUDIO ON CACHE BOOL "" FORCE)
 set(SFML_BUILD_NETWORK OFF CACHE BOOL "" FORCE)
 set(SFML_USE_SYSTEM_LIBS OFF CACHE BOOL "" FORCE)
 add_subdirectory(libs/SFML)
@@ -73,6 +73,7 @@ target_link_libraries(breakout
     sfml-graphics
     sfml-window
     sfml-system
+    sfml-audio
     box2d
     imgui-sfml
     OpenGL::GL

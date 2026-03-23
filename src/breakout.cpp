@@ -2,12 +2,15 @@
 
 // ---------- Header Files ----------
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <imgui.h>
 #include <imgui-SFML.h>
 #include <vector>
 #include <random>
 #include <box2d/box2d.h>
 #include <algorithm>
+#include <cmath>
+#include <stdint.h>
 
 // ---------- Game Parameter Configuration ----------
 namespace Config {
@@ -111,6 +114,11 @@ sf::RectangleShape sfPaddle;                // Paddle SFML graphic
 std::random_device rd;  // Random number seed
 std::mt19937 rng(rd()); // Random number generator
 
+sf::SoundBuffer hitBrickBuffer;             // Sound buffer for hitting bricks
+sf::SoundBuffer hitPaddleBuffer;            // Sound buffer for hitting paddle
+sf::Sound* hitBrickSound = nullptr;         // Sound object for playing brick hit sound
+sf::Sound* hitPaddleSound = nullptr;        // Sound object for playing paddle hit sound
+
 // ---------- Coordinate Conversion Functions ----------
 inline b2Vec2 toBox2D(const sf::Vector2f& pos) {
     return { pos.x / Config::PPM, (Config::WINDOW_H - pos.y) / Config::PPM };
@@ -140,9 +148,14 @@ public:
             other = bodyA;
         }
 
+        // Check if the other object is a brick
+        auto it = std::find(bricks.begin(), bricks.end(), other);
+        bool isBrick = (it != bricks.end());
+
+        // If the ball hit something, check what it hit and respond accordingly
         if (ballHit) {
             // If the collided object is the paddle or a brick, increase the ball's speed
-            if (other == paddle || std::find(bricks.begin(), bricks.end(), other) != bricks.end()) {
+            if (other == paddle || isBrick) {
                 b2Vec2 vel = ball->GetLinearVelocity();
                 vel.x *= Config::SPEED_FACTOR;
                 vel.y *= Config::SPEED_FACTOR;
@@ -155,8 +168,8 @@ public:
 
             // If the collided object is a brick, reduce the brick's health and check if it needs to be destroyed
             if ((bodyA == ball && bodyB != paddle) || (bodyB == ball && bodyA != paddle)) {
+
                 b2Body* brickBody = (bodyA == ball) ? bodyB : bodyA;
-                auto it = std::find(bricks.begin(), bricks.end(), brickBody);
                 if (it != bricks.end()) {
                     size_t idx = it - bricks.begin();
                     brickHealth[idx]--;
@@ -166,6 +179,14 @@ public:
                         toDestroy.push_back(brickBody);
                     }
                 }
+            }
+
+            // Play the appropriate sound effect based on what was hit
+            if (isBrick) {
+                hitBrickSound->play(); // Play brick hit sound
+            }
+            else if (other == paddle) {
+                hitPaddleSound->play(); // Play paddle hit sound
             }
 
             // If the collided object is the ground, game over
@@ -182,6 +203,29 @@ public:
 };
 
 ContactListener contactListener;
+
+// ---------- Sound Generation Function ----------
+sf::SoundBuffer generateHitSound(float frequency = 440.0f, float duration = 0.1f, float volume = 0.5f) {
+    const int sampleRate = 44100;
+    int sampleCount = static_cast<int>(sampleRate * duration);
+    std::vector<std::int16_t> samples(sampleCount);
+
+    // Generate a simple hit sound using a decaying sine wave
+    for (int i = 0; i < sampleCount; ++i) {
+        float t = static_cast<float>(i) / sampleRate;
+        float envelope = std::exp(-t * 20.0f); // Exponential decay envelope
+        float value = envelope * std::sin(2.0f * 3.14159265f * frequency * t);
+        samples[i] = static_cast<std::int16_t>(value * volume * 32767);
+    }
+
+    // Map the samples to a mono sound channel
+    std::vector<sf::SoundChannel> channelMap = { sf::SoundChannel::Mono };
+
+    // Load the generated samples into an SFML sound buffer
+    sf::SoundBuffer buffer;
+    buffer.loadFromSamples(samples.data(), samples.size(), 1, sampleRate, channelMap);
+    return buffer;
+}
 
 // ---------- Reset Game ----------
 void resetGame() {
@@ -567,6 +611,14 @@ int main() {
 
     resetGame(); // Create physical world and game objects in advance
 
+    // Generate a higher-pitched, shorter sound for hitting bricks to differentiate it from hitting the paddle
+    hitBrickBuffer = generateHitSound(600.0f, 0.08f, 0.6f);
+    hitBrickSound = new sf::Sound(hitBrickBuffer);
+
+    // Generate a lower-pitched, longer sound for hitting the paddle to differentiate it from hitting bricks
+    hitPaddleBuffer = generateHitSound(300.0f, 0.1f, 0.5f);
+    hitPaddleSound = new sf::Sound(hitPaddleBuffer);
+
     // Main loop
     sf::Clock deltaClock;
     while (window.isOpen()) {
@@ -617,5 +669,7 @@ int main() {
     // Clean up resources
     ImGui::SFML::Shutdown();
     if (world) delete world;
+    if (hitBrickSound) delete hitBrickSound;
+    if (hitPaddleSound) delete hitPaddleSound;
     return 0;
 }
