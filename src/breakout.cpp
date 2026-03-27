@@ -868,7 +868,11 @@ void loadFont(ImGuiIO& io) {
         else {
             std::filesystem::path fontPath = Config::FONT_FILE;
             io.Fonts->Clear();
-            ImFont* font = io.Fonts->AddFontFromFileTTF(fontPath.string().c_str(), Config::FONT_SIZE);
+            ImFont* font = io.Fonts->AddFontFromFileTTF(
+                fontPath.string().c_str(),
+                Config::FONT_SIZE,
+                nullptr,
+                io.Fonts->GetGlyphRangesChineseFull());
             if (font) {
                 ImGui::SFML::UpdateFontTexture();
             }
