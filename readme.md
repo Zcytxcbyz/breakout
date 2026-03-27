@@ -39,6 +39,7 @@ The project uses the following libraries:
 - **Box2D 2.4.2** (physics engine)
 - **Dear ImGui 1.91.9** (UI library)
 - **imgui-sfml 3.0** (ImGui binding for SFML)
+- **simpleini v4.25** (INI file parsing)
 
 All dependencies are stored as source code in the `libs/` directory. A helper script is provided to automatically clone them.
 
