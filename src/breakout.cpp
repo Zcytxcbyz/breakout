@@ -875,6 +875,10 @@ void loadFont(ImGuiIO& io) {
                 io.Fonts->GetGlyphRangesChineseFull());
             if (font) {
                 ImGui::SFML::UpdateFontTexture();
+
+                // Scale all ImGui sizes according to the configured font size
+                float scale = Config::FONT_SIZE / 18.0f;
+                ImGui::GetStyle().ScaleAllSizes(scale);
             }
             else {
 #ifdef _DEBUG
