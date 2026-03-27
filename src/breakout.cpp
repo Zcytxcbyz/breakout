@@ -18,6 +18,7 @@
 #include <cmath>
 #include <stdint.h>
 #include <string>
+#include <filesystem>
 
 // ---------- Game Parameter Configuration ----------
 namespace Config {
@@ -25,6 +26,9 @@ namespace Config {
     int WINDOW_W = 960;               // Window width (pixels)
     int WINDOW_H = 540;               // Window height (pixels)
     int FRAME_LIMIT = 60;             // Frame rate limit
+
+    std::string FONT_FILE;            // Font file path
+    float FONT_SIZE = 18.0f;          // Font size for UI text
 
     // Physics unit conversion
     float PPM = 30.0f;                // 1 meter = 30 pixels
@@ -758,6 +762,10 @@ void LoadConfigFromResource() {
     Config::WINDOW_H = ini.GetLongValue("Window", "WINDOW_H", Config::WINDOW_H);
     Config::FRAME_LIMIT = ini.GetLongValue("Window", "FRAME_LIMIT", Config::FRAME_LIMIT);
 
+    // Font configuration values
+    Config::FONT_FILE = ini.GetValue("Font", "FontFile", Config::FONT_FILE.c_str());
+    Config::FONT_SIZE = static_cast<float>(ini.GetDoubleValue("Font", "FontSize", Config::FONT_SIZE));
+
     // Physics configuration values
     Config::PPM = static_cast<float>(ini.GetDoubleValue("Physics", "PPM", Config::PPM));
     Config::GRAVITY = static_cast<float>(ini.GetDoubleValue("Physics", "GRAVITY", Config::GRAVITY));
@@ -835,6 +843,35 @@ void LoadTextsFromResource() {
 }
 #endif // _WIN32
 
+// ---------- Load Custom Font ----------
+void loadFont(ImGuiIO& io) {
+    if (!Config::FONT_FILE.empty()) {
+        std::error_code ec;
+        if (!std::filesystem::exists(Config::FONT_FILE, ec)) {
+#ifdef _DEBUG
+#ifdef _WIN32
+            OutputDebugStringA(("Font file not found: " + Config::FONT_FILE).c_str());
+#endif
+#endif
+        }
+        else {
+            std::filesystem::path fontPath = Config::FONT_FILE;
+            io.Fonts->Clear();
+            ImFont* font = io.Fonts->AddFontFromFileTTF(fontPath.string().c_str(), Config::FONT_SIZE);
+            if (font) {
+                ImGui::SFML::UpdateFontTexture();
+            }
+            else {
+#ifdef _DEBUG
+#ifdef _WIN32
+                OutputDebugStringA(("Failed to load font: " + Config::FONT_FILE).c_str());
+#endif
+#endif
+            }
+        }
+    }
+}
+
 // ---------- Main Function ----------
 int main() {
     // Load configuration and text resources
@@ -867,6 +904,7 @@ int main() {
     // Disable ImGui automatic window position and size saving
     ImGuiIO& io = ImGui::GetIO();
     io.IniFilename = nullptr;
+    loadFont(io); // Load custom font for ImGui
 
     resetGame(); // Create physical world and game objects in advance
     InitSound(); // Initialize sound effects in advance to avoid delay on first play
