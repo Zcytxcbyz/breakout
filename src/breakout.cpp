@@ -852,6 +852,24 @@ void LoadTextsFromResource() {
     Texts::Resume = ini.GetValue("Pause", "Resume", Texts::Resume.c_str());
     Texts::GamePaused = ini.GetValue("Pause", "GamePaused", Texts::GamePaused.c_str());
 }
+
+// ---------- UTF-8 to ANSI Conversion Function (for Windows) ----------
+std::string utf8ToAnsi(const std::string& utf8) {
+    if (utf8.empty()) return "";
+
+    // UTF-8 to UTF-16
+    int wide_len = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), (int)utf8.size(), nullptr, 0);
+    if (wide_len == 0) return "";
+    std::wstring wide(wide_len, 0);
+    MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), (int)utf8.size(), &wide[0], wide_len);
+
+    // UTF-16 to system code page ANSI
+    int ansi_len = WideCharToMultiByte(CP_ACP, 0, wide.c_str(), wide_len, nullptr, 0, nullptr, nullptr);
+    if (ansi_len == 0) return "";
+    std::string ansi(ansi_len, 0);
+    WideCharToMultiByte(CP_ACP, 0, wide.c_str(), wide_len, &ansi[0], ansi_len, nullptr, nullptr);
+    return ansi;
+}
 #endif // _WIN32
 
 // ---------- Load Custom Font ----------
@@ -893,13 +911,16 @@ int main() {
 #ifdef _WIN32
     LoadConfigFromResource();
     LoadTextsFromResource();
+    std::string title = utf8ToAnsi(Texts::GameName);
+#else
+    std::string title = Texts::GameName;
 #endif // _WIN32
 
     // Create SFML window
     sf::RenderWindow window(sf::VideoMode({
         static_cast<unsigned int>(Config::WINDOW_W), 
         static_cast<unsigned int>(Config::WINDOW_H) }),
-        Texts::GameName.c_str(), sf::Style::Titlebar | sf::Style::Close);
+        title.c_str(), sf::Style::Titlebar | sf::Style::Close);
     window.setFramerateLimit(Config::FRAME_LIMIT);
     ImGui::SFML::Init(window);
 
