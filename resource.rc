@@ -1,1 +1,8 @@
+// Microsoft Visual C++ generated resource script.
+
+// ICON Resource
 1 ICON "assets/icon.ico"
+
+// RCDATA resources for configuration and text strings
+CONFIG  RCDATA "config/config.ini"
+TEXTS   RCDATA "config/texts.ini"

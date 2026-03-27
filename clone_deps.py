@@ -29,6 +29,11 @@ DEPENDENCIES = [
         "url": "https://github.com/SFML/imgui-sfml.git",
         "version": "v3.0",
         "dir": "imgui-sfml"
+    },
+    {
+        "url": "https://github.com/brofield/simpleini.git",
+        "version": "v4.25",
+        "dir": "simpleini"
     }
 ]
 

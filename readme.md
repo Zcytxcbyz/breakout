@@ -108,14 +108,33 @@ This script requires **Python 3** and **Git** to be installed and available in y
 
 ## 🛠️ Custom Configuration
 
-Game parameters are centralized in the `Config` namespace in `src/breakout.cpp`, you can easily adjust:
+Game parameters and UI texts are embedded as resources within the executable. You can easily customize them using **Resource Hacker** without recompiling the game.
 
-- Window size, frame rate
-- Ball/paddle/brick dimensions, speed, density, elasticity
-- Brick spawn probability, health range, score
-- Collision acceleration coefficient, maximum speed, etc.
+### Available Parameters
 
-Modify and recompile to apply changes.
+All game settings are stored in `config.ini` (embedded as `CONFIG` resource), including:
+
+- **Window**: size, frame rate
+- **Physics**: pixels per meter, gravity
+- **Ball**: radius, density, restitution, initial speed, max speed, speed factor
+- **Paddle**: width, height, speed, density, restitution
+- **Walls**: thickness
+- **Bricks**: rows, columns, spacing, spawn probability, health range, score per brick
+- **Offsets**: ball and paddle vertical positions
+
+All UI texts (menu labels, help messages, score display, etc.) are stored in `texts.ini` (embedded as `TEXTS` resource).
+
+### How to Modify
+
+1. Download and install [Resource Hacker](https://www.angusj.com/resourcehacker/).
+2. Open `breakout.exe` with Resource Hacker.
+3. In the left tree view, expand **RCDATA** → **CONFIG** (for game parameters) or **TEXTS** (for UI texts).
+4. Edit the content directly in the right panel.
+5. Click **Compile Script** and then **Save** the file.
+
+The changes will take effect the next time you run the game. If a resource is missing or corrupted, the game falls back to the default values, ensuring it still runs.
+
+> **Note**: Ensure that the INI syntax is preserved; comments (lines starting with `;`) are ignored and can be used for documentation.
 
 ---
 

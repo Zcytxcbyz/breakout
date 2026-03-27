@@ -4,7 +4,8 @@
 #ifdef _WIN32
 #define NOMINMAX
 #include <windows.h>
-#endif
+#include <SimpleIni.h>
+#endif // _WIN32
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
@@ -16,80 +17,81 @@
 #include <algorithm>
 #include <cmath>
 #include <stdint.h>
+#include <string>
 
 // ---------- Game Parameter Configuration ----------
 namespace Config {
     // Window
-    const int WINDOW_W = 960;               // Window width (pixels)
-    const int WINDOW_H = 540;               // Window height (pixels)
-    const int FRAME_LIMIT = 60;             // Frame rate limit
+    int WINDOW_W = 960;               // Window width (pixels)
+    int WINDOW_H = 540;               // Window height (pixels)
+    int FRAME_LIMIT = 60;             // Frame rate limit
 
     // Physics unit conversion
-    const float PPM = 30.0f;                // 1 meter = 30 pixels
+    float PPM = 30.0f;                // 1 meter = 30 pixels
 
     // Ball parameters (pixel units)
-    const float BALL_RADIUS = 12.0f;        // Ball radius (pixels)
-    const float BALL_DENSITY = 1.0f;        // Density (physics units)
-    const float BALL_RESTITUTION = 1.0f;    // Restitution coefficient (physics units)
-    const float BALL_INIT_SPEED = 200.0f;   // Pixels per second
-    const float MAX_BALL_SPEED = 20.0f;     // Meters per second (physics units)
-    const float SPEED_FACTOR = 1.1f;        // Speed multiplier after each collision
-    const float GRAVITY = 1.0f;             // Gravity strength (physics units, applied as downward force on the ball)
+    float BALL_RADIUS = 12.0f;        // Ball radius (pixels)
+    float BALL_DENSITY = 1.0f;        // Density (physics units)
+    float BALL_RESTITUTION = 1.0f;    // Restitution coefficient (physics units)
+    float BALL_INIT_SPEED = 200.0f;   // Pixels per second
+    float MAX_BALL_SPEED = 20.0f;     // Meters per second (physics units)
+    float SPEED_FACTOR = 1.1f;        // Speed multiplier after each collision
+    float GRAVITY = 1.0f;             // Gravity strength (physics units, applied as downward force on the ball)
 
     // Paddle parameters (pixel units)
-    const float PADDLE_WIDTH = 160.0f;      // Paddle width (pixels)
-    const float PADDLE_HEIGHT = 30.0f;      // Paddle height (pixels)
-    const float PADDLE_SPEED = 800.0f;      // Pixels per second
-    const float PADDLE_DENSITY = 1.0f;      // Density (physics units)
-    const float PADDLE_RESTITUTION = 1.0f;  // Restitution coefficient (physics units)
+    float PADDLE_WIDTH = 160.0f;      // Paddle width (pixels)
+    float PADDLE_HEIGHT = 30.0f;      // Paddle height (pixels)
+    float PADDLE_SPEED = 800.0f;      // Pixels per second
+    float PADDLE_DENSITY = 1.0f;      // Density (physics units)
+    float PADDLE_RESTITUTION = 1.0f;  // Restitution coefficient (physics units)
 
     // Boundary wall thickness (pixels)
-    const float WALL_THICKNESS = 10.0f;     // Boundary wall thickness (pixels)
+    float WALL_THICKNESS = 10.0f;     // Boundary wall thickness (pixels)
 
     // Brick parameters (pixel units)
-    const int BRICK_ROWS = 5;               // Number of brick rows
-    const int BRICK_COLS = 10;              // Number of brick columns
-    const float BRICK_START_X = 80.0f;      // Brick starting X position (pixels)
-    const float BRICK_START_Y = 60.0f;      // Brick starting Y position (pixels)  
-    const float BRICK_WIDTH = 70.0f;        // Brick width (pixels)
-    const float BRICK_HEIGHT = 25.0f;       // Brick height (pixels)
-    const float BRICK_SPACING_X = 80.0f;    // Brick horizontal spacing (pixels)
-    const float BRICK_SPACING_Y = 35.0f;    // Brick vertical spacing (pixels)
-    const int BRICK_SPAWN_PROB = 70;        // Brick spawn probability (percentage)
-    const int MIN_HEALTH = 1;               // Minimum brick health
-    const int MAX_HEALTH = 3;               // Maximum brick health
-    const int SCORE_PER_BRICK = 10;         // Score per brick
+    int BRICK_ROWS = 5;               // Number of brick rows
+    int BRICK_COLS = 10;              // Number of brick columns
+    float BRICK_START_X = 80.0f;      // Brick starting X position (pixels)
+    float BRICK_START_Y = 60.0f;      // Brick starting Y position (pixels)  
+    float BRICK_WIDTH = 70.0f;        // Brick width (pixels)
+    float BRICK_HEIGHT = 25.0f;       // Brick height (pixels)
+    float BRICK_SPACING_X = 80.0f;    // Brick horizontal spacing (pixels)
+    float BRICK_SPACING_Y = 35.0f;    // Brick vertical spacing (pixels)
+    int BRICK_SPAWN_PROB = 70;        // Brick spawn probability (percentage)
+    int MIN_HEALTH = 1;               // Minimum brick health
+    int MAX_HEALTH = 3;               // Maximum brick health
+    int SCORE_PER_BRICK = 10;         // Score per brick
 
     // Initial position offsets (pixels)
-    const float BALL_Y_OFFSET = 50.0f;      // Ball's Y offset relative to screen center
-    const float PADDLE_Y_OFFSET = 50.0f;    // Paddle's distance from the bottom
+    float BALL_Y_OFFSET = 50.0f;      // Ball's Y offset relative to screen center
+    float PADDLE_Y_OFFSET = 50.0f;    // Paddle's distance from the bottom
 }
 
 // ---------- UI Text ----------
 namespace Texts {
-    const char* GameName = "Breakout";                              // Game name
-    const char* StartGame = "Start Game";                           // Start game button text
-    const char* Help = "Help";                                      // Help button text
-    const char* Exit = "Exit";                                      // Exit button text
-    const char* Controls = "Controls:";                             // Controls title
-    const char* BrickHealth = "Brick Health (Color -> Hits):";      // Brick health explanation
-    const char* MoveRight = "Move Right: D / Right Arrow";          // Move right explanation
-    const char* MoveLeft = "Move Left: A / Left Arrow";             // Move left explanation
-    const char* PauseHelp = "Pause: P / ESC";                       // Pause explanation
-    const char* RedHit = "Red   -> 1 hit";                          // Red brick explanation
-    const char* GreenHit = "Green -> 2 hits";                       // Green brick explanation
-    const char* BlueHit = "Blue  -> 3 hits";                        // Blue brick explanation
-    const char* DestroyAll = "Destroy all bricks to win!";          // Game objective explanation
-    const char* Close = "Close";                                    // Close button text
-    const char* ScoreFormat = "Score: %d";                          // Score display format
-    const char* ScoreWindow = "Score";                              // Score window title
-    const char* YouWin = "You Win!";                                // Victory text
-    const char* GameOver = "Game Over";                             // Failure text
-    const char* Restart = "Restart";                                // Restart button text
-    const char* MainMenu = "Main Menu";                             // Main menu button text
-    const char* Paused = "Paused";                                  // Paused text
-    const char* Resume = "Resume";                                  // Resume button text
-    const char* GamePaused = "Game Paused";                         // Game paused text
+    std::string GameName = "Breakout";                              // Game name
+    std::string StartGame = "Start Game";                           // Start game button text
+    std::string Help = "Help";                                      // Help button text
+    std::string Exit = "Exit";                                      // Exit button text
+    std::string Controls = "Controls:";                             // Controls title
+    std::string BrickHealth = "Brick Health (Color -> Hits):";      // Brick health explanation
+    std::string MoveRight = "Move Right: D / Right Arrow";          // Move right explanation
+    std::string MoveLeft = "Move Left: A / Left Arrow";             // Move left explanation
+    std::string PauseHelp = "Pause: P / ESC";                       // Pause explanation
+    std::string RedHit = "Red   -> 1 hit";                          // Red brick explanation
+    std::string GreenHit = "Green -> 2 hits";                       // Green brick explanation
+    std::string BlueHit = "Blue  -> 3 hits";                        // Blue brick explanation
+    std::string DestroyAll = "Destroy all bricks to win!";          // Game objective explanation
+    std::string Close = "Close";                                    // Close button text
+    std::string ScoreFormat = "Score: %d";                          // Score display format
+    std::string ScoreWindow = "Score";                              // Score window title
+    std::string YouWin = "You Win!";                                // Victory text
+    std::string GameOver = "Game Over";                             // Failure text
+    std::string Restart = "Restart";                                // Restart button text
+    std::string MainMenu = "Main Menu";                             // Main menu button text
+    std::string Paused = "Paused";                                  // Paused text
+    std::string Resume = "Resume";                                  // Resume button text
+    std::string GamePaused = "Game Paused";                         // Game paused text
 }
 
 // ---------- Global Variables ----------
@@ -525,42 +527,40 @@ void helpWindow(sf::RenderWindow& window, sf::Vector2u& winSize) {
     ImGui::SetNextWindowSize(ImVec2(280, 260), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowPos(ImVec2(winSize.x / 2.0f, winSize.y / 2.0f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
 
-    ImGui::Begin(Texts::Help, &showHelp,
+    ImGui::Begin(Texts::Help.c_str(), &showHelp,
         ImGuiWindowFlags_NoTitleBar |
         ImGuiWindowFlags_NoResize |
         ImGuiWindowFlags_NoScrollbar);
 
     // Help window title with close button at the top right corner
     float availWidth = ImGui::GetContentRegionAvail().x;
-    ImGui::Text(Texts::Help);
+    ImGui::Text(Texts::Help.c_str());
     ImGui::SameLine(availWidth - 10);
     ButtonWithSound("X", ImVec2(20, 20), [&] { showHelp = false; });
     ImGui::Separator();
     ImGui::Spacing(); ImGui::Spacing();
 
     // Controls explanation with bullet points for each control action
-    ImGui::Text(Texts::Controls);
-    ImGui::BulletText(Texts::MoveLeft);
-    ImGui::BulletText(Texts::MoveRight);
-    ImGui::BulletText(Texts::PauseHelp);
+    ImGui::Text(Texts::Controls.c_str());
+    ImGui::BulletText(Texts::MoveLeft.c_str());
+    ImGui::BulletText(Texts::MoveRight.c_str());
+    ImGui::BulletText(Texts::PauseHelp.c_str());
     ImGui::Separator();
 
     // Brick health explanation
-    ImGui::Text(Texts::BrickHealth);
-    ImGui::BulletText(Texts::RedHit);
-    ImGui::BulletText(Texts::GreenHit);
-    ImGui::BulletText(Texts::BlueHit);
+    ImGui::Text(Texts::BrickHealth.c_str());
+    ImGui::BulletText(Texts::RedHit.c_str());
+    ImGui::BulletText(Texts::GreenHit.c_str());
+    ImGui::BulletText(Texts::BlueHit.c_str());
 
     // Game objective explanation at the bottom of the help window
     ImGui::Separator();
-    ImGui::Text(Texts::DestroyAll);
+    ImGui::Text(Texts::DestroyAll.c_str());
     ImGui::Spacing(); ImGui::Spacing();
 
     // Close button at the bottom center of the window
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 40);
-    if (ImGui::Button(Texts::Close, ImVec2(80, 30))) {
-        showHelp = false;
-    }
+    ButtonWithSound(Texts::Close.c_str(), ImVec2(80, 30), [&] { showHelp = false; });
     ImGui::End();
 }
 
@@ -570,7 +570,7 @@ void startMenu(sf::RenderWindow& window) {
     sf::Vector2u winSize = window.getSize();
     ImGui::SetNextWindowPos(ImVec2(winSize.x / 2.0f, winSize.y / 2.0f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiCond_Always);
-    ImGui::Begin(Texts::MainMenu, nullptr,
+    ImGui::Begin(Texts::MainMenu.c_str(), nullptr,
         ImGuiWindowFlags_NoTitleBar |
         ImGuiWindowFlags_NoResize |
         ImGuiWindowFlags_NoMove |
@@ -579,13 +579,13 @@ void startMenu(sf::RenderWindow& window) {
     // Display game title at the top center of the menu
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 40);
     ImGui::SetWindowFontScale(1.5f);
-    ImGui::Text(Texts::GameName);
+    ImGui::Text(Texts::GameName.c_str());
     ImGui::SetWindowFontScale(1.0f);
     ImGui::Spacing(); ImGui::Spacing();
 
     // Start Game button resets the game state and starts a new game
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
-    ButtonWithSound(Texts::StartGame, ImVec2(120, 40), [&] {
+    ButtonWithSound(Texts::StartGame.c_str(), ImVec2(120, 40), [&] {
         gameState = STATE_PLAYING;
         resetGame();
         });
@@ -593,14 +593,14 @@ void startMenu(sf::RenderWindow& window) {
 
     // Help button shows the help window, which contains game control instructions and objective explanation
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
-    ButtonWithSound(Texts::Help, ImVec2(120, 40), [&] {
+    ButtonWithSound(Texts::Help.c_str(), ImVec2(120, 40), [&] {
         showHelp = true;
         });
     ImGui::Spacing();
 
     // Exit button closes the game
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
-    ButtonWithSound(Texts::Exit, ImVec2(120, 40), [&] {
+    ButtonWithSound(Texts::Exit.c_str(), ImVec2(120, 40), [&] {
         window.close();
         });
     ImGui::End();
@@ -617,7 +617,7 @@ void gameOver(sf::RenderWindow& window) {
     sf::Vector2u winSize = window.getSize();
     ImGui::SetNextWindowPos(ImVec2(winSize.x / 2.0f, winSize.y / 2.0f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowSize(ImVec2(300, 160), ImGuiCond_Always);
-    ImGui::Begin(Texts::GameOver, nullptr,
+    ImGui::Begin(Texts::GameOver.c_str(), nullptr,
         ImGuiWindowFlags_NoTitleBar |
         ImGuiWindowFlags_NoResize |
         ImGuiWindowFlags_NoMove |
@@ -627,20 +627,20 @@ void gameOver(sf::RenderWindow& window) {
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 40);
     ImGui::SetWindowFontScale(1.3f);
     if (gameWin)
-        ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), Texts::YouWin);
+        ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), Texts::YouWin.c_str());
     else
-        ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), Texts::GameOver);
+        ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), Texts::GameOver.c_str());
     ImGui::SetWindowFontScale(1.0f);
     ImGui::Spacing();
 
     // Display final score below the game over/victory text, centered horizontally
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 30);
-    ImGui::Text(Texts::ScoreFormat, score);
+    ImGui::Text(Texts::ScoreFormat.c_str(), score);
     ImGui::Spacing(); ImGui::Spacing();
 
     // Restart button resets the game state and starts a new game
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
-    ButtonWithSound(Texts::Restart, ImVec2(120, 40), [&] {
+    ButtonWithSound(Texts::Restart.c_str(), ImVec2(120, 40), [&] {
         resetGame();
         gameState = STATE_PLAYING;
         });
@@ -648,7 +648,7 @@ void gameOver(sf::RenderWindow& window) {
 
     // Main Menu button returns to the main menu and resets the game state
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
-    ButtonWithSound(Texts::MainMenu, ImVec2(120, 40), [&] {
+    ButtonWithSound(Texts::MainMenu.c_str(), ImVec2(120, 40), [&] {
         gameState = STATE_MENU;
         resetGame();
         });
@@ -661,13 +661,13 @@ void showScore() {
     ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(100, 40), ImGuiCond_Always);
     ImGui::SetNextWindowBgAlpha(0.5f);
-    ImGui::Begin(Texts::ScoreWindow, nullptr,
+    ImGui::Begin(Texts::ScoreWindow.c_str(), nullptr,
         ImGuiWindowFlags_NoTitleBar |
         ImGuiWindowFlags_NoResize |
         ImGuiWindowFlags_NoMove |
         ImGuiWindowFlags_NoInputs);
     ImGui::SetWindowFontScale(1.2f);
-    ImGui::Text(Texts::ScoreFormat, score);
+    ImGui::Text(Texts::ScoreFormat.c_str(), score);
     ImGui::End();
 }
 
@@ -677,7 +677,7 @@ void pauseMenu(sf::RenderWindow& window) {
     sf::Vector2u winSize = window.getSize();
     ImGui::SetNextWindowPos(ImVec2(winSize.x / 2.0f, winSize.y / 2.0f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowSize(ImVec2(300, 160), ImGuiCond_Always);
-    ImGui::Begin(Texts::Paused, nullptr,
+    ImGui::Begin(Texts::Paused.c_str(), nullptr,
         ImGuiWindowFlags_NoTitleBar |
         ImGuiWindowFlags_NoResize |
         ImGuiWindowFlags_NoMove |
@@ -686,30 +686,144 @@ void pauseMenu(sf::RenderWindow& window) {
     // Display "Game Paused" text at the top center of the window
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 56);
     ImGui::SetWindowFontScale(1.5f);
-    ImGui::Text(Texts::GamePaused);
+    ImGui::Text(Texts::GamePaused.c_str());
     ImGui::SetWindowFontScale(1.0f);
     ImGui::Spacing(); ImGui::Spacing();
 
     // Resume button resumes the game and returns to playing state
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
-    ButtonWithSound(Texts::Resume, ImVec2(120, 40), [&] {
+    ButtonWithSound(Texts::Resume.c_str(), ImVec2(120, 40), [&] {
         gameState = STATE_PLAYING;
         });
     ImGui::Spacing();
 
     // Main Menu button returns to the main menu and resets the game state
     ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 60);
-    ButtonWithSound(Texts::MainMenu, ImVec2(120, 40), [&] {
+    ButtonWithSound(Texts::MainMenu.c_str(), ImVec2(120, 40), [&] {
         gameState = STATE_MENU;
         resetGame(); // Reset game state when returning to main menu
         });
     ImGui::End();
 }
 
+#ifdef _WIN32
+// ---------- Resource Loading Function ----------
+std::string LoadResourceAsString(const char* resourceName, const char* resourceType) {
+
+    HRSRC hRes = FindResource(nullptr, resourceName, resourceType);
+    if (!hRes) return "";
+    HGLOBAL hData = LoadResource(nullptr, hRes);
+    if (!hData) return "";
+    DWORD size = SizeofResource(nullptr, hRes);
+    const char* data = static_cast<const char*>(LockResource(hData));
+    if (!data) return "";
+    return std::string(data, size);
+}
+
+// ---------- Load Configuration from Resource ----------
+void LoadConfigFromResource() {
+    std::string content = LoadResourceAsString("CONFIG", "RCDATA");
+    if (content.empty()) return;
+
+    CSimpleIniA ini;
+    ini.SetUnicode();
+    if (ini.LoadData(content.c_str()) != SI_OK) return;
+
+    // Load window configuration values
+    Config::WINDOW_W = ini.GetLongValue("Window", "WINDOW_W", Config::WINDOW_W);
+    Config::WINDOW_H = ini.GetLongValue("Window", "WINDOW_H", Config::WINDOW_H);
+    Config::FRAME_LIMIT = ini.GetLongValue("Window", "FRAME_LIMIT", Config::FRAME_LIMIT);
+
+    // Physics configuration values
+    Config::PPM = static_cast<float>(ini.GetDoubleValue("Physics", "PPM", Config::PPM));
+    Config::GRAVITY = static_cast<float>(ini.GetDoubleValue("Physics", "GRAVITY", Config::GRAVITY));
+
+    // Ball configuration values
+    Config::BALL_RADIUS = static_cast<float>(ini.GetDoubleValue("Ball", "BALL_RADIUS", Config::BALL_RADIUS));
+    Config::BALL_DENSITY = static_cast<float>(ini.GetDoubleValue("Ball", "BALL_DENSITY", Config::BALL_DENSITY));
+    Config::BALL_RESTITUTION = static_cast<float>(ini.GetDoubleValue("Ball", "BALL_RESTITUTION", Config::BALL_RESTITUTION));
+    Config::BALL_INIT_SPEED = static_cast<float>(ini.GetDoubleValue("Ball", "BALL_INIT_SPEED", Config::BALL_INIT_SPEED));
+    Config::MAX_BALL_SPEED = static_cast<float>(ini.GetDoubleValue("Ball", "MAX_BALL_SPEED", Config::MAX_BALL_SPEED));
+    Config::SPEED_FACTOR = static_cast<float>(ini.GetDoubleValue("Ball", "SPEED_FACTOR", Config::SPEED_FACTOR));
+
+    // Paddle configuration values
+    Config::PADDLE_WIDTH = static_cast<float>(ini.GetDoubleValue("Paddle", "PADDLE_WIDTH", Config::PADDLE_WIDTH));
+    Config::PADDLE_HEIGHT = static_cast<float>(ini.GetDoubleValue("Paddle", "PADDLE_HEIGHT", Config::PADDLE_HEIGHT));
+    Config::PADDLE_SPEED = static_cast<float>(ini.GetDoubleValue("Paddle", "PADDLE_SPEED", Config::PADDLE_SPEED));
+    Config::PADDLE_DENSITY = static_cast<float>(ini.GetDoubleValue("Paddle", "PADDLE_DENSITY", Config::PADDLE_DENSITY));
+    Config::PADDLE_RESTITUTION = static_cast<float>(ini.GetDoubleValue("Paddle", "PADDLE_RESTITUTION", Config::PADDLE_RESTITUTION));
+
+    // Wall configuration values
+    Config::WALL_THICKNESS = static_cast<float>(ini.GetDoubleValue("Walls", "WALL_THICKNESS", Config::WALL_THICKNESS));
+
+    // Brick configuration values
+    Config::BRICK_ROWS = ini.GetLongValue("Bricks", "BRICK_ROWS", Config::BRICK_ROWS);
+    Config::BRICK_COLS = ini.GetLongValue("Bricks", "BRICK_COLS", Config::BRICK_COLS);
+    Config::BRICK_START_X = static_cast<float>(ini.GetDoubleValue("Bricks", "BRICK_START_X", Config::BRICK_START_X));
+    Config::BRICK_START_Y = static_cast<float>(ini.GetDoubleValue("Bricks", "BRICK_START_Y", Config::BRICK_START_Y));
+    Config::BRICK_WIDTH = static_cast<float>(ini.GetDoubleValue("Bricks", "BRICK_WIDTH", Config::BRICK_WIDTH));
+    Config::BRICK_HEIGHT = static_cast<float>(ini.GetDoubleValue("Bricks", "BRICK_HEIGHT", Config::BRICK_HEIGHT));
+    Config::BRICK_SPACING_X = static_cast<float>(ini.GetDoubleValue("Bricks", "BRICK_SPACING_X", Config::BRICK_SPACING_X));
+    Config::BRICK_SPACING_Y = static_cast<float>(ini.GetDoubleValue("Bricks", "BRICK_SPACING_Y", Config::BRICK_SPACING_Y));
+    Config::BRICK_SPAWN_PROB = ini.GetLongValue("Bricks", "BRICK_SPAWN_PROB", Config::BRICK_SPAWN_PROB);
+    Config::MIN_HEALTH = ini.GetLongValue("Bricks", "MIN_HEALTH", Config::MIN_HEALTH);
+    Config::MAX_HEALTH = ini.GetLongValue("Bricks", "MAX_HEALTH", Config::MAX_HEALTH);
+    Config::SCORE_PER_BRICK = ini.GetLongValue("Bricks", "SCORE_PER_BRICK", Config::SCORE_PER_BRICK);
+
+    // Offset configuration values
+    Config::BALL_Y_OFFSET = static_cast<float>(ini.GetDoubleValue("Offsets", "BALL_Y_OFFSET", Config::BALL_Y_OFFSET));
+    Config::PADDLE_Y_OFFSET = static_cast<float>(ini.GetDoubleValue("Offsets", "PADDLE_Y_OFFSET", Config::PADDLE_Y_OFFSET));
+}
+
+// ---------- Load Text Resources from Resource ----------
+void LoadTextsFromResource() {
+    std::string content = LoadResourceAsString("TEXTS", "RCDATA");
+    if (content.empty()) return;
+
+    CSimpleIniA ini;
+    ini.SetUnicode();
+    if (ini.LoadData(content.c_str()) != SI_OK) return;
+
+    // Load all text resources from the INI file, using existing default values if keys are missing
+    Texts::GameName = ini.GetValue("Game", "GameName", Texts::GameName.c_str());
+    Texts::StartGame = ini.GetValue("Menu", "StartGame", Texts::StartGame.c_str());
+    Texts::Help = ini.GetValue("Menu", "Help", Texts::Help.c_str());
+    Texts::Exit = ini.GetValue("Menu", "Exit", Texts::Exit.c_str());
+    Texts::Controls = ini.GetValue("Menu", "Controls", Texts::Controls.c_str());
+    Texts::BrickHealth = ini.GetValue("Menu", "BrickHealth", Texts::BrickHealth.c_str());
+    Texts::MoveRight = ini.GetValue("Menu", "MoveRight", Texts::MoveRight.c_str());
+    Texts::MoveLeft = ini.GetValue("Menu", "MoveLeft", Texts::MoveLeft.c_str());
+    Texts::PauseHelp = ini.GetValue("Menu", "PauseHelp", Texts::PauseHelp.c_str());
+    Texts::RedHit = ini.GetValue("Menu", "RedHit", Texts::RedHit.c_str());
+    Texts::GreenHit = ini.GetValue("Menu", "GreenHit", Texts::GreenHit.c_str());
+    Texts::BlueHit = ini.GetValue("Menu", "BlueHit", Texts::BlueHit.c_str());
+    Texts::DestroyAll = ini.GetValue("Menu", "DestroyAll", Texts::DestroyAll.c_str());
+    Texts::Close = ini.GetValue("Menu", "Close", Texts::Close.c_str());
+    Texts::ScoreFormat = ini.GetValue("Score", "ScoreFormat", Texts::ScoreFormat.c_str());
+    Texts::ScoreWindow = ini.GetValue("Score", "ScoreWindow", Texts::ScoreWindow.c_str());
+    Texts::YouWin = ini.GetValue("GameOver", "YouWin", Texts::YouWin.c_str());
+    Texts::GameOver = ini.GetValue("GameOver", "GameOver", Texts::GameOver.c_str());
+    Texts::Restart = ini.GetValue("GameOver", "Restart", Texts::Restart.c_str());
+    Texts::MainMenu = ini.GetValue("GameOver", "MainMenu", Texts::MainMenu.c_str());
+    Texts::Paused = ini.GetValue("Pause", "Paused", Texts::Paused.c_str());
+    Texts::Resume = ini.GetValue("Pause", "Resume", Texts::Resume.c_str());
+    Texts::GamePaused = ini.GetValue("Pause", "GamePaused", Texts::GamePaused.c_str());
+}
+#endif // _WIN32
+
 // ---------- Main Function ----------
 int main() {
+    // Load configuration and text resources
+#ifdef _WIN32
+    LoadConfigFromResource();
+    LoadTextsFromResource();
+#endif // _WIN32
+
     // Create SFML window
-    sf::RenderWindow window(sf::VideoMode({ Config::WINDOW_W, Config::WINDOW_H }), Texts::GameName, sf::Style::Titlebar | sf::Style::Close);
+    sf::RenderWindow window(sf::VideoMode({
+        static_cast<unsigned int>(Config::WINDOW_W), 
+        static_cast<unsigned int>(Config::WINDOW_H) }),
+        Texts::GameName.c_str(), sf::Style::Titlebar | sf::Style::Close);
     window.setFramerateLimit(Config::FRAME_LIMIT);
     ImGui::SFML::Init(window);
 
@@ -724,7 +838,7 @@ int main() {
         SetClassLongPtr(hwnd, GCLP_HICONSM, (LONG_PTR)hIcon);
         SendMessage(hwnd, WM_NCACTIVATE, TRUE, 0);
     }
-#endif
+#endif // _WIN32
 
     // Disable ImGui automatic window position and size saving
     ImGuiIO& io = ImGui::GetIO();

@@ -63,6 +63,9 @@ if(WIN32)
     target_sources(breakout PRIVATE "resource.rc")
 endif()
 
+# ========== SimpleIni ==========
+target_include_directories(breakout PRIVATE libs/simpleini)
+
 # Hide console in Release (already present)
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     target_link_options(breakout PRIVATE /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup)
