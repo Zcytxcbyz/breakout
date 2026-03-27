@@ -711,18 +711,42 @@ void pauseMenu(sf::RenderWindow& window) {
 std::string LoadResourceAsString(const char* resourceName, const char* resourceType) {
 
     HRSRC hRes = FindResource(nullptr, resourceName, resourceType);
-    if (!hRes) return "";
+    if (!hRes) {
+#ifdef _DEBUG
+        DWORD err = GetLastError();
+        OutputDebugStringA(("FindResource failed for " + std::string(resourceName) +
+            ", type=" + std::string(resourceType) +
+            ", error=" + std::to_string(err)).c_str());
+#endif // _DEBUG
+        return "";
+    }
     HGLOBAL hData = LoadResource(nullptr, hRes);
-    if (!hData) return "";
+    if (!hData) {
+#ifdef _DEBUG
+        DWORD err = GetLastError();
+        OutputDebugStringA(("LoadResource failed for " + std::string(resourceName) +
+            ", type=" + std::string(resourceType) +
+            ", error=" + std::to_string(err)).c_str());
+#endif // _DEBUG
+        return "";
+    }
     DWORD size = SizeofResource(nullptr, hRes);
     const char* data = static_cast<const char*>(LockResource(hData));
-    if (!data) return "";
+    if (!data) {
+#ifdef _DEBUG
+        DWORD err = GetLastError();
+        OutputDebugStringA(("SizeofResource failed for " + std::string(resourceName) +
+            ", type=" + std::string(resourceType) +
+            ", error=" + std::to_string(err)).c_str());
+#endif // _DEBUG
+        return "";
+    }
     return std::string(data, size);
 }
 
 // ---------- Load Configuration from Resource ----------
 void LoadConfigFromResource() {
-    std::string content = LoadResourceAsString("CONFIG", "RCDATA");
+    std::string content = LoadResourceAsString("CONFIG", RT_RCDATA);
     if (content.empty()) return;
 
     CSimpleIniA ini;
@@ -777,7 +801,7 @@ void LoadConfigFromResource() {
 
 // ---------- Load Text Resources from Resource ----------
 void LoadTextsFromResource() {
-    std::string content = LoadResourceAsString("TEXTS", "RCDATA");
+    std::string content = LoadResourceAsString("TEXTS", RT_RCDATA);
     if (content.empty()) return;
 
     CSimpleIniA ini;
