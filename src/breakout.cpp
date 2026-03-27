@@ -1,4 +1,15 @@
-// Breakout - Brick Breaker Game Based on Box2D and SFML
+/*
+=================================================================================================================
+Breakout - Brick Breaker Game Based on Box2D and SFML
+=================================================================================================================
+This is a simple implementation of the classic Breakout game using C++,
+Box2D for physics simulation, and SFML for graphics and audio.
+The game features a ball that bounces around the screen,
+a paddle controlled by the player, and rows of bricks that can be destroyed by hitting them with the ball.
+The player wins by destroying all the bricks and loses if the ball falls below the paddle.
+=================================================================================================================
+*/
+
 
 // ---------- Header Files ----------
 #ifdef _WIN32
@@ -962,3 +973,5 @@ int main() {
     cleanupSound();
     return 0;
 }
+
+// End of code
