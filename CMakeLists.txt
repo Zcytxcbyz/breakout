@@ -64,7 +64,9 @@ if(WIN32)
 endif()
 
 # ========== SimpleIni ==========
-target_include_directories(breakout PRIVATE libs/simpleini)
+if(WIN32)
+    target_include_directories(breakout PRIVATE libs/simpleini)
+endif()
 
 # Hide console in Release (already present)
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
