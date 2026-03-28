@@ -151,6 +151,7 @@ This project is for learning and communication purposes only. You are free to mo
 - [Box2D](https://box2d.org/) – Powerful 2D physics engine
 - [Dear ImGui](https://github.com/ocornut/imgui) – Lightweight immediate mode GUI
 - [imgui-sfml](https://github.com/SFML/imgui-sfml) – Bridge layer between ImGui and SFML
+- [simpleini](https://github.com/brofield/simpleini.git) - Simple INI file parser
 
 ---
 

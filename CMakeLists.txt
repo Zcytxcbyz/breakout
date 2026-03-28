@@ -70,11 +70,13 @@ endif()
 
 # Hide console in Release (already present)
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    target_link_options(breakout PRIVATE /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup)
-    target_compile_options(breakout PRIVATE /GL)     # Whole program optimization
-    target_link_options(breakout PRIVATE /LTCG)      # Link-time code generation
-    target_link_options(breakout PRIVATE /OPT:REF)   # Remove unreferenced functions and data
-    target_link_options(breakout PRIVATE /OPT:ICF)   # Merge identical COMDAT sections
+    if(MSVC)
+        target_link_options(breakout PRIVATE /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup)
+        target_compile_options(breakout PRIVATE /GL)     # Whole program optimization
+        target_link_options(breakout PRIVATE /LTCG)      # Link-time code generation
+        target_link_options(breakout PRIVATE /OPT:REF)   # Remove unreferenced functions and data
+        target_link_options(breakout PRIVATE /OPT:ICF)   # Merge identical COMDAT sections
+    endif()
 endif()
 
 # Link libraries
