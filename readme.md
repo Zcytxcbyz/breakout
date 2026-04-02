@@ -61,7 +61,7 @@ This script requires **Python 3** and **Git** to be installed and available in y
 
 ### Requirements
 
-- Windows 10/11
+- Windows 10/11 (for 64-bit builds) or Windows 7/8 (for 32-bit builds)
 - Visual Studio 2022 or higher (or MinGW-w64)
 - CMake 3.15 or higher
 - Python 3 (for fetching dependencies, optional if you manually place them)
@@ -80,21 +80,39 @@ This script requires **Python 3** and **Git** to be installed and available in y
    ```
 
 3. **Generate project files**  
-   Open a terminal and execute the following commands (using Visual Studio 2026 as an example):
+
+   #### For 64-bit (Windows 10/11):
    ```bash
    mkdir build
    cd build
    cmake .. -G "Visual Studio 18 2026" -A x64 -DCMAKE_BUILD_TYPE=Release
    ```
+   Or using CMakePresets:
+   ```bash
+   cmake --preset x64-release
+   ```
+
+   #### For 32-bit (Windows 7/8 compatible):
+   ```bash
+   mkdir build32
+   cd build32
+   cmake .. -G "Visual Studio 18 2026" -A Win32 -DCMAKE_BUILD_TYPE=Release
+   ```
+   Or using CMakePresets:
+   ```bash
+   cmake --preset x86-release
+   ```
 
 4. **Compile**  
-   Open the generated `breakout.sln` in Visual Studio, select the `Release` configuration, and build the solution; or directly from the command line:
+   Open the generated `.sln` file in Visual Studio, select the `Release` configuration, and build the solution; or directly from the command line:
    ```bash
    cmake --build . --config Release
    ```
 
 5. **Run**  
-   After compilation, the executable file is located at `build/Release/breakout.exe`, run it directly.
+   After compilation, the executable file is located at:
+   - 64-bit: `build/Release/breakout.exe` or `out/build/x64-release/Release/breakout.exe`
+   - 32-bit: `build32/Release/breakout.exe` or `out/build/x86-release/Release/breakout.exe`
 
 > **Note**: If using MinGW-w64, change the generator to `"MinGW Makefiles"` and ensure the corresponding toolchain is installed.
 
@@ -104,6 +122,7 @@ This script requires **Python 3** and **Git** to be installed and available in y
 
 - The **Release version** is statically linked with all dependencies and has the console window disabled, allowing direct double-click execution.
 - For distribution, simply copy `breakout.exe` to the target machine; no additional DLLs are required.
+- **32-bit executables** are compatible with **Windows 7 SP1** and later (including Windows 8/8.1). **64-bit executables** require **Windows 10** or higher (default Visual Studio target). The project uses separate build configurations to ensure optimal compatibility for each architecture.
 
 ---
 
