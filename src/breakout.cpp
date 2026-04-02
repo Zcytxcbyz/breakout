@@ -14,6 +14,13 @@ The player wins by destroying all the bricks and loses if the ball falls below t
 // ---------- Header Files ----------
 #ifdef _WIN32
 #define NOMINMAX
+
+// Force use of Windows 7 API only in 32 - bit builds
+#if defined(_M_IX86) || defined(__i386__)
+#define WINVER 0x0601
+#define _WIN32_WINNT 0x0601
+#endif
+
 #include <windows.h>
 #include <SimpleIni.h>
 #endif // _WIN32
@@ -30,6 +37,8 @@ The player wins by destroying all the bricks and loses if the ball falls below t
 #include <stdint.h>
 #include <string>
 #include <filesystem>
+#include <unordered_map>
+#include <functional>
 
 // ---------- Game Parameter Configuration ----------
 namespace Config {

@@ -70,13 +70,22 @@ endif()
 
 # Hide console in Release (already present)
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    if(MSVC)
+    # 32-bit and 64-bit Windows have different subsystem versions
+    if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+        target_link_options(breakout PRIVATE /SUBSYSTEM:WINDOWS,6.01 /ENTRY:mainCRTStartup)
+    else()
         target_link_options(breakout PRIVATE /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup)
-        target_compile_options(breakout PRIVATE /GL)     # Whole program optimization
-        target_link_options(breakout PRIVATE /LTCG)      # Link-time code generation
-        target_link_options(breakout PRIVATE /OPT:REF)   # Remove unreferenced functions and data
-        target_link_options(breakout PRIVATE /OPT:ICF)   # Merge identical COMDAT sections
     endif()
+    target_compile_options(breakout PRIVATE /GL)     # Whole program optimization
+    target_link_options(breakout PRIVATE /LTCG)      # Link-time code generation
+    target_link_options(breakout PRIVATE /OPT:REF)   # Remove unreferenced functions and data
+    target_link_options(breakout PRIVATE /OPT:ICF)   # Merge identical COMDAT sections
+endif()
+
+# Windows 7 minimum version for 32-bit builds
+if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 4)
+    add_compile_definitions(_WIN32_WINNT=0x0601)
+    add_compile_definitions(WINVER=0x0601)
 endif()
 
 # Link libraries
