@@ -43,48 +43,49 @@ The player wins by destroying all the bricks and loses if the ball falls below t
 // ---------- Game Parameter Configuration ----------
 namespace Config {
     // Window
-    int WINDOW_W = 960;               // Window width (pixels)
-    int WINDOW_H = 540;               // Window height (pixels)
-    int FRAME_LIMIT = 60;             // Frame rate limit
+    int WINDOW_W = 960;                     // Window width (pixels)
+    int WINDOW_H = 540;                     // Window height (pixels)
+    int FRAME_LIMIT = 60;                   // Frame rate limit
 
-    std::string FONT_FILE;            // Font file path
-    float FONT_SIZE = 18.0f;          // Font size for UI text
+    std::string FONT_FILE;                  // Font file path
+    float FONT_SIZE = 18.0f;                // Font size for UI text
+    std::string FONT_GLYPHS = "english";    // Font glyphs (e.g., "english", "chinese_full", "japanese", etc.)
 
     // Physics unit conversion
-    float PPM = 30.0f;                // 1 meter = 30 pixels
+    float PPM = 30.0f;                      // 1 meter = 30 pixels
 
     // Ball parameters (pixel units)
-    float BALL_RADIUS = 12.0f;        // Ball radius (pixels)
-    float BALL_DENSITY = 1.0f;        // Density (physics units)
-    float BALL_RESTITUTION = 1.0f;    // Restitution coefficient (physics units)
-    float BALL_INIT_SPEED = 200.0f;   // Pixels per second
-    float MAX_BALL_SPEED = 20.0f;     // Meters per second (physics units)
-    float SPEED_FACTOR = 1.1f;        // Speed multiplier after each collision
-    float GRAVITY = 1.0f;             // Gravity strength (physics units, applied as downward force on the ball)
+    float BALL_RADIUS = 12.0f;              // Ball radius (pixels)
+    float BALL_DENSITY = 1.0f;              // Density (physics units)
+    float BALL_RESTITUTION = 1.0f;          // Restitution coefficient (physics units)
+    float BALL_INIT_SPEED = 200.0f;         // Pixels per second
+    float MAX_BALL_SPEED = 20.0f;           // Meters per second (physics units)
+    float SPEED_FACTOR = 1.1f;              // Speed multiplier after each collision
+    float GRAVITY = 1.0f;                   // Gravity strength (physics units, applied as downward force on the ball)
 
     // Paddle parameters (pixel units)
-    float PADDLE_WIDTH = 160.0f;      // Paddle width (pixels)
-    float PADDLE_HEIGHT = 30.0f;      // Paddle height (pixels)
-    float PADDLE_SPEED = 800.0f;      // Pixels per second
-    float PADDLE_DENSITY = 1.0f;      // Density (physics units)
-    float PADDLE_RESTITUTION = 1.0f;  // Restitution coefficient (physics units)
+    float PADDLE_WIDTH = 160.0f;            // Paddle width (pixels)
+    float PADDLE_HEIGHT = 30.0f;            // Paddle height (pixels)
+    float PADDLE_SPEED = 800.0f;            // Pixels per second
+    float PADDLE_DENSITY = 1.0f;            // Density (physics units)
+    float PADDLE_RESTITUTION = 1.0f;        // Restitution coefficient (physics units)
 
     // Boundary wall thickness (pixels)
-    float WALL_THICKNESS = 10.0f;     // Boundary wall thickness (pixels)
+    float WALL_THICKNESS = 10.0f;           // Boundary wall thickness (pixels)
 
     // Brick parameters (pixel units)
-    int BRICK_ROWS = 5;               // Number of brick rows
-    int BRICK_COLS = 10;              // Number of brick columns
-    float BRICK_START_X = 80.0f;      // Brick starting X position (pixels)
-    float BRICK_START_Y = 60.0f;      // Brick starting Y position (pixels)  
-    float BRICK_WIDTH = 70.0f;        // Brick width (pixels)
-    float BRICK_HEIGHT = 25.0f;       // Brick height (pixels)
-    float BRICK_SPACING_X = 80.0f;    // Brick horizontal spacing (pixels)
-    float BRICK_SPACING_Y = 35.0f;    // Brick vertical spacing (pixels)
-    int BRICK_SPAWN_PROB = 70;        // Brick spawn probability (percentage)
-    int MIN_HEALTH = 1;               // Minimum brick health
-    int MAX_HEALTH = 3;               // Maximum brick health
-    int SCORE_PER_BRICK = 10;         // Score per brick
+    int BRICK_ROWS = 5;                     // Number of brick rows
+    int BRICK_COLS = 10;                    // Number of brick columns
+    float BRICK_START_X = 80.0f;            // Brick starting X position (pixels)
+    float BRICK_START_Y = 60.0f;            // Brick starting Y position (pixels)  
+    float BRICK_WIDTH = 70.0f;              // Brick width (pixels)
+    float BRICK_HEIGHT = 25.0f;             // Brick height (pixels)
+    float BRICK_SPACING_X = 80.0f;          // Brick horizontal spacing (pixels)
+    float BRICK_SPACING_Y = 35.0f;          // Brick vertical spacing (pixels)
+    int BRICK_SPAWN_PROB = 70;              // Brick spawn probability (percentage)
+    int MIN_HEALTH = 1;                     // Minimum brick health
+    int MAX_HEALTH = 3;                     // Maximum brick health
+    int SCORE_PER_BRICK = 10;               // Score per brick
 
     // Initial position offsets (pixels)
     float BALL_Y_OFFSET = 50.0f;      // Ball's Y offset relative to screen center
@@ -785,6 +786,7 @@ void LoadConfigFromResource() {
     // Font configuration values
     Config::FONT_FILE = ini.GetValue("Font", "FontFile", Config::FONT_FILE.c_str());
     Config::FONT_SIZE = static_cast<float>(ini.GetDoubleValue("Font", "FontSize", Config::FONT_SIZE));
+    Config::FONT_GLYPHS = ini.GetValue("Font", "GlyphRanges", Config::FONT_GLYPHS.c_str());
 
     // Physics configuration values
     Config::PPM = static_cast<float>(ini.GetDoubleValue("Physics", "PPM", Config::PPM));
@@ -863,6 +865,20 @@ void LoadTextsFromResource() {
 }
 #endif
 
+// ---------- Get Glyph Ranges ----------
+const ImWchar* GetGlyphRangesFromString(const std::string& range) {
+    ImGuiIO& io = ImGui::GetIO();
+    if (range == "english")            return io.Fonts->GetGlyphRangesDefault();
+    if (range == "chinese_full")       return io.Fonts->GetGlyphRangesChineseFull();
+    if (range == "chinese_simplified") return io.Fonts->GetGlyphRangesChineseSimplifiedCommon();
+    if (range == "japanese")           return io.Fonts->GetGlyphRangesJapanese();
+    if (range == "korean")             return io.Fonts->GetGlyphRangesKorean();
+    if (range == "cyrillic")           return io.Fonts->GetGlyphRangesCyrillic();
+    if (range == "thai")               return io.Fonts->GetGlyphRangesThai();
+    if (range == "vietnamese")         return io.Fonts->GetGlyphRangesVietnamese();
+    return io.Fonts->GetGlyphRangesDefault();
+}
+
 // ---------- Load Custom Font ----------
 void loadFont(ImGuiIO& io) {
     if (!Config::FONT_FILE.empty()) {
@@ -881,7 +897,7 @@ void loadFont(ImGuiIO& io) {
                 fontPath.string().c_str(),
                 Config::FONT_SIZE,
                 nullptr,
-                io.Fonts->GetGlyphRangesChineseFull());
+                GetGlyphRangesFromString(Config::FONT_GLYPHS));
             if (font) {
                 ImGui::SFML::UpdateFontTexture();
 
